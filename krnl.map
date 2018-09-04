@@ -767,44 +767,44 @@ LOAD fs/disklog.o
 .stab.indexstr
  *(.stab.indexstr)
 
-.comment        0x0000000000000000       0x29
+.comment        0x0000000000000000       0x2b
  *(.comment)
- .comment       0x0000000000000000       0x29 kernel/start.o
-                                         0x2a (size before relaxing)
- .comment       0x0000000000000000       0x2a kernel/main.o
- .comment       0x0000000000000000       0x2a kernel/clock.o
- .comment       0x0000000000000000       0x2a kernel/keyboard.o
- .comment       0x0000000000000000       0x2a kernel/tty.o
- .comment       0x0000000000000000       0x2a kernel/console.o
- .comment       0x0000000000000000       0x2a kernel/i8259.o
- .comment       0x0000000000000000       0x2a kernel/global.o
- .comment       0x0000000000000000       0x2a kernel/protect.o
- .comment       0x0000000000000000       0x2a kernel/proc.o
- .comment       0x0000000000000000       0x2a kernel/systask.o
- .comment       0x0000000000000000       0x2a kernel/hd.o
- .comment       0x0000000000000000       0x2a lib/printf.o
- .comment       0x0000000000000000       0x2a lib/vsprintf.o
- .comment       0x0000000000000000       0x2a lib/klib.o
- .comment       0x0000000000000000       0x2a lib/misc.o
- .comment       0x0000000000000000       0x2a lib/open.o
- .comment       0x0000000000000000       0x2a lib/read.o
- .comment       0x0000000000000000       0x2a lib/write.o
- .comment       0x0000000000000000       0x2a lib/close.o
- .comment       0x0000000000000000       0x2a lib/unlink.o
- .comment       0x0000000000000000       0x2a lib/getpid.o
- .comment       0x0000000000000000       0x2a lib/syslog.o
- .comment       0x0000000000000000       0x2a lib/fork.o
- .comment       0x0000000000000000       0x2a lib/exit.o
- .comment       0x0000000000000000       0x2a lib/sleep.o
- .comment       0x0000000000000000       0x2a lib/wait.o
- .comment       0x0000000000000000       0x2a mm/main.o
- .comment       0x0000000000000000       0x2a mm/func.o
- .comment       0x0000000000000000       0x2a fs/main.o
- .comment       0x0000000000000000       0x2a fs/open.o
- .comment       0x0000000000000000       0x2a fs/misc.o
- .comment       0x0000000000000000       0x2a fs/read_write.o
- .comment       0x0000000000000000       0x2a fs/link.o
- .comment       0x0000000000000000       0x2a fs/disklog.o
+ .comment       0x0000000000000000       0x2b kernel/start.o
+                                         0x2c (size before relaxing)
+ .comment       0x0000000000000000       0x2c kernel/main.o
+ .comment       0x0000000000000000       0x2c kernel/clock.o
+ .comment       0x0000000000000000       0x2c kernel/keyboard.o
+ .comment       0x0000000000000000       0x2c kernel/tty.o
+ .comment       0x0000000000000000       0x2c kernel/console.o
+ .comment       0x0000000000000000       0x2c kernel/i8259.o
+ .comment       0x0000000000000000       0x2c kernel/global.o
+ .comment       0x0000000000000000       0x2c kernel/protect.o
+ .comment       0x0000000000000000       0x2c kernel/proc.o
+ .comment       0x0000000000000000       0x2c kernel/systask.o
+ .comment       0x0000000000000000       0x2c kernel/hd.o
+ .comment       0x0000000000000000       0x2c lib/printf.o
+ .comment       0x0000000000000000       0x2c lib/vsprintf.o
+ .comment       0x0000000000000000       0x2c lib/klib.o
+ .comment       0x0000000000000000       0x2c lib/misc.o
+ .comment       0x0000000000000000       0x2c lib/open.o
+ .comment       0x0000000000000000       0x2c lib/read.o
+ .comment       0x0000000000000000       0x2c lib/write.o
+ .comment       0x0000000000000000       0x2c lib/close.o
+ .comment       0x0000000000000000       0x2c lib/unlink.o
+ .comment       0x0000000000000000       0x2c lib/getpid.o
+ .comment       0x0000000000000000       0x2c lib/syslog.o
+ .comment       0x0000000000000000       0x2c lib/fork.o
+ .comment       0x0000000000000000       0x2c lib/exit.o
+ .comment       0x0000000000000000       0x2c lib/sleep.o
+ .comment       0x0000000000000000       0x2c lib/wait.o
+ .comment       0x0000000000000000       0x2c mm/main.o
+ .comment       0x0000000000000000       0x2c mm/func.o
+ .comment       0x0000000000000000       0x2c fs/main.o
+ .comment       0x0000000000000000       0x2c fs/open.o
+ .comment       0x0000000000000000       0x2c fs/misc.o
+ .comment       0x0000000000000000       0x2c fs/read_write.o
+ .comment       0x0000000000000000       0x2c fs/link.o
+ .comment       0x0000000000000000       0x2c fs/disklog.o
 
 .debug
  *(.debug)
