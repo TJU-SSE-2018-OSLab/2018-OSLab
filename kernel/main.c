@@ -28,21 +28,22 @@ PUBLIC int kernel_main()
     struct task* p_task;
     struct proc* p_proc= proc_table;
     char* p_task_stack = task_stack + STACK_SIZE_TOTAL;
-    u16   selector_ldt = SELECTOR_LDT_FIRST;
+    // u16   selector_ldt = SELECTOR_LDT_FIRST;
     u8    privilege;
     u8    rpl;
     int   eflags;
     int   i, j;
     int   prio;
-
-    //似乎可以加开机动画
-
-    //启动进程
     for (i = 0; i < NR_TASKS+NR_PROCS; i++)
-    /*for (i = 0; i < NR_TASKS; i++)*/
     {
+        if (i >= NR_TASKS + NR_NATIVE_PROCS) {
+            p_proc->p_flags = FREE_SLOT;
+            p_proc++;
+            p_task++;
+            continue;
+        }
         if (i < NR_TASKS)
-        {   /* 任务 */
+        {     /* 任务 */
             p_task    = task_table + i;
             privilege = PRIVILEGE_TASK;
             rpl       = RPL_TASK;
@@ -50,7 +51,7 @@ PUBLIC int kernel_main()
             prio      = 15;     //设定优先级为15
         }
         else
-        {   /* 用户进程 */
+        {                  /* 用户进程 */
             p_task    = user_proc_table + (i - NR_TASKS);
             privilege = PRIVILEGE_USER;
             rpl       = RPL_USER;
@@ -59,26 +60,63 @@ PUBLIC int kernel_main()
         }
 
         strcpy(p_proc->name, p_task->name); /* 设定进程名称 */
-        p_proc->pid = i;            /* 设定pid */
+        p_proc->p_parent = NO_TASK;
 
-        p_proc->ldt_sel = selector_ldt;
+        if (strcmp(p_task->name, "Init") != 0) {
+            p_proc->ldts[INDEX_LDT_C]  = gdt[SELECTOR_KERNEL_CS >> 3];
+            p_proc->ldts[INDEX_LDT_RW] = gdt[SELECTOR_KERNEL_DS >> 3];
 
-        memcpy(&p_proc->ldts[0], &gdt[SELECTOR_KERNEL_CS >> 3],
-               sizeof(struct descriptor));
-        p_proc->ldts[0].attr1 = DA_C | privilege << 5;
-        memcpy(&p_proc->ldts[1], &gdt[SELECTOR_KERNEL_DS >> 3],
-               sizeof(struct descriptor));
-        p_proc->ldts[1].attr1 = DA_DRW | privilege << 5;
-        p_proc->regs.cs = (0 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.ds = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.es = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.fs = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        p_proc->regs.ss = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+            /* change the DPLs */
+            p_proc->ldts[INDEX_LDT_C].attr1  = DA_C   | privilege << 5;
+            p_proc->ldts[INDEX_LDT_RW].attr1 = DA_DRW | privilege << 5;
+        }
+        else {      /* INIT process */
+            unsigned int k_base;
+            unsigned int k_limit;
+            int ret = get_kernel_map(&k_base, &k_limit);
+            assert(ret == 0);
+            init_descriptor(&p_proc->ldts[INDEX_LDT_C],
+                  0, /* bytes before the entry point
+                      * are useless (wasted) for the
+                      * INIT process, doesn't matter
+                      */
+                  (k_base + k_limit) >> LIMIT_4K_SHIFT,
+                  DA_32 | DA_LIMIT_4K | DA_C | privilege << 5);
+
+            init_descriptor(&p_proc->ldts[INDEX_LDT_RW],
+                  0, /* bytes before the entry point
+                      * are useless (wasted) for the
+                      * INIT process, doesn't matter
+                      */
+                  (k_base + k_limit) >> LIMIT_4K_SHIFT,
+                  DA_32 | DA_LIMIT_4K | DA_DRW | privilege << 5);
+        }
+
+        // memcpy(&p_proc->ldts[INDEX_LDT_C], &gdt[SELECTOR_KERNEL_CS >> 3],
+        //        sizeof(struct descriptor));
+        // p_proc->ldts[0].attr1 = DA_C | privilege << 5;
+        // memcpy(&p_proc->ldts[INDEX_LDT_RW], &gdt[SELECTOR_KERNEL_DS >> 3],
+        //        sizeof(struct descriptor));
+        // p_proc->ldts[1].attr1 = DA_DRW | privilege << 5;
+
+        // p_proc->regs.cs = (0 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        // p_proc->regs.ds = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        // p_proc->regs.es = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        // p_proc->regs.fs = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        // p_proc->regs.ss = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
+        // p_proc->regs.gs = (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl;
+        p_proc->regs.cs = INDEX_LDT_C << 3 | SA_TIL | rpl;
+        p_proc->regs.ds =
+            p_proc->regs.es =
+            p_proc->regs.fs =
+            p_proc->regs.ss = INDEX_LDT_RW << 3 | SA_TIL | rpl;
         p_proc->regs.gs = (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl;
 
         p_proc->regs.eip = (u32)p_task->initial_eip;
         p_proc->regs.esp = (u32)p_task_stack;
         p_proc->regs.eflags = eflags;
+
+        /* p_proc->nr_tty       = 0; */
 
         p_proc->p_flags = 0;
         p_proc->p_msg = 0;
@@ -87,6 +125,7 @@ PUBLIC int kernel_main()
         p_proc->has_int_msg = 0;
         p_proc->q_sending = 0;
         p_proc->next_sending = 0;
+        p_proc->pid = i;
 
         for (j = 0; j < NR_FILES; j++)
             p_proc->filp[j] = 0;
@@ -96,21 +135,59 @@ PUBLIC int kernel_main()
         p_task_stack -= p_task->stacksize;
         p_proc++;
         p_task++;
-        selector_ldt += 1 << 3;
+        // selector_ldt += 1 << 3;
     }
 
-    //初始化进程
+        /* proc_table[NR_TASKS + 0].nr_tty = 0; */
+        /* proc_table[NR_TASKS + 1].nr_tty = 1; */
+        /* proc_table[NR_TASKS + 2].nr_tty = 1; */
+
     k_reenter = 0;
     ticks = 0;
 
     p_proc_ready = proc_table;
 
     init_clock();
-    init_keyboard();
+        init_keyboard();
 
     restart();
 
     while(1){}
+}
+
+
+void nothing(){
+}
+
+
+void Init_test()
+{
+    char tty_name[] = "/dev_tty2";
+
+    char rdbuf[128];
+
+
+    int fd_stdin  = open(tty_name, O_RDWR);
+    assert(fd_stdin  == 0);
+    int fd_stdout = open(tty_name, O_RDWR);
+    assert(fd_stdout == 1);
+
+    printf("Init() is running ...\n");
+
+    while(1) {
+        int r = read(fd_stdin, rdbuf, 70);
+        rdbuf[r] = 0;
+        printf("Before fork()");
+        int pid = fork();
+        if (pid != 0) { /* parent process */
+            printf("parent is running, child pid:%d\n", pid);
+            spin("parent");
+        }
+        else {  /* child process */
+            printf("child is running, pid:%d\n", getpid());
+            spin("child");
+        }
+    }
 }
 
 
@@ -126,379 +203,665 @@ PUBLIC int get_ticks()
     return msg.RETVAL;
 }
 
-PUBLIC void addTwoString(char *to_str,char *from_str1,char *from_str2){
-    int i=0,j=0;
-    while(from_str1[i]!=0)
-        to_str[j++]=from_str1[i++];
-    i=0;
-    while(from_str2[i]!=0)
-        to_str[j++]=from_str2[i++];
-    to_str[j]=0;
-}
 
-void shell(char *tty_name){
-	 int fd;
+/*======================================================================*
+                               TestA
+ *======================================================================*/
 
-    //int isLogin = 0;
+//1号终端
+void TestA()
+{
+    int fd;
+    int i, n;
 
-    char rdbuf[512];
-    char cmd[512];
-    char arg1[512];
-    char arg2[512];
-    char buf[1024];
-    char temp[512];
+    char tty_name[] = "/dev_tty0";
+
+    char rdbuf[128];
+
 
     int fd_stdin  = open(tty_name, O_RDWR);
     assert(fd_stdin  == 0);
     int fd_stdout = open(tty_name, O_RDWR);
     assert(fd_stdout == 1);
 
+//  char filename[MAX_FILENAME_LEN+1] = "zsp01";
+    const char bufw[80] = {0};
+//  const int rd_bytes = 3;
+//  char bufr[rd_bytes];
+
     clear();
-   
-   if(strcmp(tty_name, "/dev_tty0")==0){
-   	printf("                        ==================================\n");
-    printf("                                   Aquinux v1.0.0             \n");
+    printf("                        ==================================\n");
+    printf("                                   MyTinix v1.0.2             \n");
     printf("                                 Kernel on Orange's \n\n");
     printf("                                     Welcome !\n");
     printf("                        ==================================\n");
-   }
-   	
 
-   char current_dirr[512] = "/";
-   
-    while (1) {  
-        //必须要清空数组
-        clearArr(rdbuf, 512);
-        clearArr(cmd, 512);
-        clearArr(arg1, 512);
-        clearArr(arg2, 512);
-        clearArr(buf, 1024);
-        clearArr(temp, 512);
-
-        printf("root@aqu%s:~$ ", current_dirr);
-
-        int r = read(fd_stdin, rdbuf, 512);
-
-        if (strcmp(rdbuf, "") == 0)
-            continue;
-
-        //解析命令
-        int i = 0;
-        int j = 0;
-        while(rdbuf[i] != ' ' && rdbuf[i] != 0)
-        {
-            cmd[i] = rdbuf[i];
-            i++;
-        }
-        i++;
-        while(rdbuf[i] != ' ' && rdbuf[i] != 0)
-        {
-            arg1[j] = rdbuf[i];
-            i++;
-            j++;
-        }
-        i++;
-        j = 0;
-        while(rdbuf[i] != ' ' && rdbuf[i] != 0)
-        {
-            arg2[j] = rdbuf[i];
-            i++;
-            j++;
-        }
-        //清空缓冲区
+    while (1) {
+        printl("[root@localhost /] ");
+        int r = read(fd_stdin, rdbuf, 70);
         rdbuf[r] = 0;
-
-        if (strcmp(cmd, "process") == 0)
+        //show();
+        if (strcmp(rdbuf, "process") == 0)
         {
             ProcessManage();
         }
-        else if (strcmp(cmd, "help") == 0)
+        else if (strcmp(rdbuf, "filemng") == 0)
+        {
+            printf("File Manager is already running on CONSOLE-1 ! \n");
+            continue;
+
+        }else if (strcmp(rdbuf, "help") == 0)
         {
             help();
-        }      
-        else if (strcmp(cmd, "clear") == 0)
-        {
-            printTitle();
         }
-        else if (strcmp(cmd, "ls") == 0)
-        {
-            ls(current_dirr);
-        }
-        else if (strcmp(cmd, "touch") == 0)
-        {
-            if(arg1[0]!='/'){
-                addTwoString(temp,current_dirr,arg1);
-                memcpy(arg1,temp,512);                
-            }
-
-            fd = open(arg1, O_CREAT | O_RDWR);
-            if (fd == -1)
-            {
-                printf("Failed to create file! Please check the filename!\n");
-                continue ;
-            }
-            write(fd, buf, 1);
-            printf("File created: %s (fd %d)\n", arg1, fd);
-            close(fd);
-        }
-        else if (strcmp(cmd, "cat") == 0)
-        {
-            if(arg1[0]!='/'){
-                addTwoString(temp,current_dirr,arg1);
-                memcpy(arg1,temp,512);                
-            }
-
-            fd = open(arg1, O_RDWR);
-            if (fd == -1)
-            {
-                printf("Failed to open file! Please check the filename!\n");
-                continue ;
-            }
-            if (!verifyFilePass(arg1, fd_stdin))
-            {
-                printf("Authorization failed\n");
-                continue;
-            }
-            read(fd, buf, 1024);
-            close(fd);
-            printf("%s\n", buf);
-        }
-        else if (strcmp(cmd, "vi") == 0)
-        {
-            if(arg1[0]!='/'){
-                addTwoString(temp,current_dirr,arg1);
-                memcpy(arg1,temp,512);                
-            }
-
-            fd = open(arg1, O_RDWR);
-            if (fd == -1)
-            {
-                printf("Failed to open file! Please check the filename!\n");
-                continue ;
-            }
-            if (!verifyFilePass(arg1, fd_stdin))
-            {
-                printf("Authorization failed\n");
-                continue;
-            }
-            int tail = read(fd_stdin, rdbuf, 512);
-            rdbuf[tail] = 0;
-
-            write(fd, rdbuf, tail+1);
-            close(fd);
-        }
-        else if (strcmp(cmd, "rm") == 0)
+        else if (strcmp(rdbuf, "runttt") == 0)
         {
 
-            if(arg1[0]!='/'){
-                addTwoString(temp,current_dirr,arg1);
-                memcpy(arg1,temp,512);                
-            }
-
-            int result;
-            result = unlink(arg1);
-            if (result == 0)
-            {
-                printf("File deleted!\n");
-                continue;
-            }
-            else
-            {
-                printf("Failed to delete file! Please check the filename!\n");
-                continue;
-            }
+            TTT(fd_stdin, fd_stdout);
         }
-        else if (strcmp(cmd, "cp") == 0)
+
+        else if (strcmp(rdbuf, "clear") == 0)
         {
-            //首先获得文件内容
-            if(arg1[0]!='/'){
-                addTwoString(temp,current_dirr,arg1);
-                memcpy(arg1,temp,512);                
-            }
-            fd = open(arg1, O_RDWR);
-            if (fd == -1)
-            {
-                printf("File not exists! Please check the filename!\n");
-                continue ;
-            }
-            
-            int tail = read(fd, buf, 1024);
-            close(fd);
+            clear();
+            printf("                        ==================================\n");
+            printf("                                   MyTinix v1.0.2             \n");
+            printf("                                 Kernel on Orange's \n\n");
+            printf("                                     Welcome !\n");
+            printf("                        ==================================\n");
+        }
 
-            if(arg2[0]!='/'){
-                addTwoString(temp,current_dirr,arg2);
-                memcpy(arg2,temp,512);                
-            }
-            /*然后创建文件*/
-            fd = open(arg2, O_CREAT | O_RDWR);
-            if (fd == -1)
-            {
-                //文件已存在，什么都不要做
-            }
-            else
-            {
-                //文件不存在，写一个空的进去
-                char temp2[1024];
-                temp2[0] = 0;
-                write(fd, temp2, 1);
-                close(fd);
-            }
-             
-            //给文件赋值
-            fd = open(arg2, O_RDWR);
-            write(fd, buf, tail+1);
-            close(fd);
+        else if (strcmp(rdbuf, "getpid") == 0) {
+            printf(asm_strcat(getpid(), "\n"));
+            printi(getpid());
+            printf("\n");
+            printi(new_getpid());
+            printf("\n");
         }
-        else if (strcmp(cmd, "mv") == 0)
-        {
-             if(arg1[0]!='/'){
-                addTwoString(temp,current_dirr,arg1);
-                memcpy(arg1,temp,512);                
-            }
-            //首先获得文件内容
-            fd = open(arg1, O_RDWR);
-            if (fd == -1)
-            {
-                printf("File not exists! Please check the filename!\n");
-                continue ;
-            }
-           
-            int tail = read(fd, buf, 1024);
-            close(fd);
 
-            if(arg2[0]!='/'){
-                addTwoString(temp,current_dirr,arg2);
-                memcpy(arg2,temp,512);                
+        else if (strcmp(rdbuf, "test_fork") == 0) {
+            int pid = fork();
+            if (pid == 0) {
+            } else {
+                printl("childpid: %d, childname: %s\n", pid, proc_table[pid].name);
             }
-            /*然后创建文件*/
-            fd = open(arg2, O_CREAT | O_RDWR);
-            if (fd == -1)
-            {
-                //文件已存在，什么都不要做
-            }
-            else
-            {
-                //文件不存在，写一个空的进去
-                char temp2[1024];
-                temp2[0] = 0;
-                write(fd, temp2, 1);
-                close(fd);
-            }
-             
-            //给文件赋值
-            fd = open(arg2, O_RDWR);
-            write(fd, buf, tail+1);
-            close(fd);
-            //最后删除文件
-            unlink(arg1);
-        }   
-        else if (strcmp(cmd, "encrypt") == 0)
-        {
-            fd = open(arg1, O_RDWR);
-            if (fd == -1)
-            {
-                printf("File not exists! Please check the filename!\n");
-                continue ;
-            }
-            if (!verifyFilePass(arg1, fd_stdin))
-            {
-                printf("Authorization failed\n");
-                continue;
-            }
-            doEncrypt(arg1, fd_stdin);
         }
-        else if (strcmp(cmd, "test") == 0)
-        {
-            doTest(arg1);
-        }
-        else if (strcmp(cmd, "game") == 0){
-        	game(fd_stdin);
-        }
-        else if (strcmp(cmd, "mkdir") == 0){
-            i = j =0;
-            while(current_dirr[i]!=0){
-                arg2[j++] = current_dirr[i++];
-            }
-            i = 0;
-            
-            while(arg1[i]!=0){
-                arg2[j++]=arg1[i++];
-            }
-            arg2[j]=0;
-            printf("%s\n", arg2);
-            fd = mkdir(arg2);            
-        }
-        else if (strcmp(cmd, "cd") == 0){
-            if(arg1[0]!='/'){ // not absolute path from root
-                i = j =0;
-                while(current_dirr[i]!=0){
-                    arg2[j++] = current_dirr[i++];
-                }
-                i = 0;
-               
-                while(arg1[i]!=0){
-                    arg2[j++]=arg1[i++];
-                }
-                arg2[j++] = '/';
-                arg2[j]=0;
-                memcpy(arg1, arg2, 512);
-            }
-            else if(strcmp(arg1, "/")!=0){
 
-                for(i=0;arg1[i]!=0;i++){}
-                arg1[i++] = '/';
-                arg1[i] = 0;
-            }
-            printf("%s\n", arg1);
-            fd = open(arg1, O_RDWR);
-
-            if(fd == -1){
-                printf("The path not exists!Please check the pathname!\n");
-            }
-            else{
-                memcpy(current_dirr, arg1, 512);
-                printf("Change dir %s success!\n", current_dirr);
+        else if (strcmp(rdbuf, "test_ldt") == 0) {
+            printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[0].ldts[INDEX_LDT_C].base_high, proc_table[0].ldts[INDEX_LDT_C].base_mid, proc_table[0].ldts[INDEX_LDT_C].base_low);
+            printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[1].ldts[INDEX_LDT_C].base_high, proc_table[1].ldts[INDEX_LDT_C].base_mid, proc_table[1].ldts[INDEX_LDT_C].base_low);
+            printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[2].ldts[INDEX_LDT_C].base_high, proc_table[2].ldts[INDEX_LDT_C].base_mid, proc_table[2].ldts[INDEX_LDT_C].base_low);
+            printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[3].ldts[INDEX_LDT_C].base_high, proc_table[3].ldts[INDEX_LDT_C].base_mid, proc_table[3].ldts[INDEX_LDT_C].base_low);
+            printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[4].ldts[INDEX_LDT_C].base_high, proc_table[4].ldts[INDEX_LDT_C].base_mid, proc_table[4].ldts[INDEX_LDT_C].base_low);
+            printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[5].ldts[INDEX_LDT_C].base_high, proc_table[5].ldts[INDEX_LDT_C].base_mid, proc_table[5].ldts[INDEX_LDT_C].base_low);
+            int k_base, k_limit;
+            get_kernel_map(&k_base, &k_limit);
+            printl("0x%x, 0x%x\n", k_base, k_limit);
+            // struct proc* p_proc= proc_table+5;
+            // printl("{MM} %d, %d, %d, %d)\n", p_proc->ldts[INDEX_LDT_C], p_proc->ldts[INDEX_LDT_RW], p_proc->ldts[INDEX_LDT_C].attr1, p_proc->ldts[INDEX_LDT_RW].attr1);
+            // struct descriptor* ppd = &(proc_table[5].ldts[INDEX_LDT_RW]);
+            // printl("{MM} %d,%d,%d,%d,%d,%d)\n", ppd->limit_low, ppd->base_low,  ppd->base_high, ppd->base_mid, ppd->attr1, ppd->limit_high_attr2, ppd->base_high);
+            int i;
+            for (i = 0; i < NR_TASKS + NR_NATIVE_PROCS ; ++i) {
+                struct descriptor* ppd = &(proc_table[i].ldts[INDEX_LDT_RW]);
+                printl("{MM} %s, %x,%x,%x,%x,%x,%x)\n", proc_table[i].name, ppd->limit_low, ppd->base_low,  ppd->base_mid, ppd->base_high, ppd->attr1, ppd->limit_high_attr2);
+                
             }
         }
+
         else
             printf("Command not found, please check!\n");
     }
-}
 
-/*======================================================================*
-                               TestA
- *======================================================================*/
 
-//A进程
-void TestA()
-{
-    //0号终端
-    char tty_name[] = "/dev_tty0";
-    //char username[128];
-    //char password[128];
-   shell(tty_name);
+    //assert(rd_bytes <= strlen(bufw));
 
+    ///* create */
+    //fd = open(filename, O_CREAT | O_RDWR);
+    //assert(fd != -1);
+    //printl("File created: %s (fd %d)\n", filename, fd);
+    //
+
+
+    ///* write */
+    //n = write(fd, bufw, strlen(bufw));
+    //assert(n == strlen(bufw));
+
+    ///* close */
+    //close(fd);
+
+    ///* open */
+    //fd = open(filename, O_RDWR);
+    //assert(fd != -1);
+    //printl("File opened. fd: %d\n", fd);
+
+    ///* read */
+    //n = read(fd, bufr, rd_bytes);
+    //assert(n == rd_bytes);
+    //bufr[n] = 0;
+    //printl("%d bytes read: %s\n", n, bufr);
+
+    ///* close */
+    //close(fd);
+
+    //char * filenames[] = {"/foo", "/bar", "/baz"};
+
+    ///* create files */
+    //for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
+    //  fd = open(filenames[i], O_CREAT | O_RDWR);
+    //  assert(fd != -1);
+    //  printl("File created: %s (fd %d)\n", filenames[i], fd);
+    //  close(fd);
+    //}
+
+    //char * rfilenames[] = {"/bar", "/foo", "/baz", "/dev_tty0"};
+
+    ///* remove files */
+    //for (i = 0; i < sizeof(rfilenames) / sizeof(rfilenames[0]); i++) {
+    //  if (unlink(rfilenames[i]) == 0)
+    //      printl("File removed: %s\n", rfilenames[i]);
+    //  else
+    //      printl("Failed to remove file: %s\n", rfilenames[i]);
+    //}
+
+    //spin("TestA");
 }
 
 /*======================================================================*
                                TestB
- *======================================================================
-*/
-//B进程
+ *======================================================================*/
+//二号终端
 void TestB()
 {
-	char tty_name[] = "/dev_tty1";
-	shell(tty_name);
-	
-	assert(0); /* never arrive here */
+    char tty_name[] = "/dev_tty1";
+
+    int fd_stdin  = open(tty_name, O_RDWR);
+    assert(fd_stdin  == 0);
+    int fd_stdout = open(tty_name, O_RDWR);
+    assert(fd_stdout == 1);
+
+    char rdbuf[128];
+    char cmd[8];
+    char filename[120];
+    char buf[1024];
+    int m,n;
+    printf("                        ==================================\n");
+    printf("                                    File Manager           \n");
+    printf("                                 Kernel on Orange's \n\n");
+    printf("                        ==================================\n");
+    while (1) {
+        printf("$ ");
+        int r = read(fd_stdin, rdbuf, 70);
+        rdbuf[r] = 0;
+
+
+
+        if (strcmp(rdbuf, "help") == 0)
+        {
+            printf("=============================================================================\n");
+            printf("Command List     :\n");
+            printf("1. create [filename]       : Create a new file \n");
+            printf("2. read [filename]         : Read the file\n");
+            printf("3. write [filename]        : Write at the end of the file\n");
+            printf("4. delete [filename]       : Delete the file\n");
+            printf("5. help                    : Display the help message\n");
+            printf("==============================================================================\n");
+        }
+        else if (strcmp(rdbuf, "help") == 0)
+        {
+
+        }
+        else
+        {
+            int fd;
+            int i = 0;
+            int j = 0;
+            char temp = -1;
+            while(rdbuf[i]!=' ')
+            {
+                cmd[i] = rdbuf[i];
+                i++;
+            }
+            cmd[i++] = 0;
+            while(rdbuf[i] != 0)
+            {
+                filename[j] = rdbuf[i];
+                i++;
+                j++;
+            }
+            filename[j] = 0;
+
+            if (strcmp(cmd, "create") == 0)
+            {
+                fd = open(filename, O_CREAT | O_RDWR);
+                if (fd == -1)
+                {
+                    printf("Failed to create file! Please check the fileaname!\n");
+                    continue ;
+                }
+                buf[0] = 0;
+                write(fd, buf, 1);
+                printf("File created: %s (fd %d)\n", filename, fd);
+                close(fd);
+            }
+            else if (strcmp(cmd, "read") == 0)
+            {
+                fd = open(filename, O_RDWR);
+                if (fd == -1)
+                {
+                    printf("Failed to open file! Please check the fileaname!\n");
+                    continue ;
+                }
+
+                n = read(fd, buf, 1024);
+
+                printf("%s\n", buf);
+                close(fd);
+
+            }
+            else if (strcmp(cmd, "write") == 0)
+            {
+                fd = open(filename, O_RDWR);
+                if (fd == -1)
+                {
+                    printf("Failed to open file! Please check the fileaname!\n");
+                    continue ;
+                }
+
+                m = read(fd_stdin, rdbuf,80);
+                rdbuf[m] = 0;
+
+                n = write(fd, rdbuf, m+1);
+                close(fd);
+            }
+            else if (strcmp(cmd, "delete") == 0)
+            {
+                m=unlink(filename);
+                if (m == 0)
+                {
+                    printf("File deleted!\n");
+                    continue;
+                }
+                else
+                {
+                    printf("Failed to delete file! Please check the fileaname!\n");
+                    continue;
+                }
+
+            }
+            else
+            {
+                printf("Command not found, Please check!\n");
+                continue;
+            }
+
+
+
+        }
+
+
+    }
+
+    assert(0); /* never arrive here */
 }
 
-//C进程
+
+
+/*======================================================================*/
+
+/* global variable of game Tictactoe */
+int tmpQP[3][3]; //表示棋盘数据的临时数组，其中的元素0表示该格为空，
+//1表示计算机放下的子，-1表示人放下的子。
+
+#define MAX_NUM 1000//扩展生成状态节点的最大数目
+const int NO_BLANK=-1001; //表示没有空格
+const int TREE_DEPTH=3; //搜索树的最大深度，如果增加此值可以提高计算机的“智力”，
+//但同时也需要增加MAX_NUM的值。
+const int NIL=1001;    //表示空
+static int s_count;     //用来表示当前分析的节点的下标
+
+struct State//该结构表示棋盘的某个状态，也可看做搜索树中的一个节点
+{
+    int QP[3][3]; //棋盘格局
+    int e_fun; //当前状态的评估函数值
+    int child[9]; //儿女节点的下标
+    int parent; //双亲节点的下标
+    int bestChild; //最优节点（评估函数值最大）的儿女节点下标
+}States[MAX_NUM]; //用来保存搜索树中状态节点的数组
+
+
+
+
+void Init()   //初始化函数，当前的棋盘格局总是保存在States[0]中
+{
+    int i,j;
+    s_count=0;
+    for(i=0;i<3;i++)
+        for(j=0;j<3;j++)
+            States[0].QP[i][j]=0; //将棋盘清空
+    States[0].parent=NIL;   //初始节点没有双亲节点
+}
+
+void PrintQP() //打印当棋盘格局的函数
+{
+    int i,j;
+    for(i=0;i<3;i++)
+    {
+        for(j=0;j<3;j++)
+            if (States[0].QP[i][j] == -1)
+            {
+                printf("%c       ",1);
+            }
+            else if (States[0].QP[i][j] == 1)
+            {
+                printf("%c       ",2);
+            }
+            else
+            {
+                printf("%d       ",0);
+            }
+
+            printf("\n");
+    }
+}
+
+int IsWin(struct State s) //有人赢了吗？返回0表示没有人赢，返回-1表示人赢了，返回1表示计算机赢了
+{
+    int i,j;
+    for(i=0;i<3;i++)
+    {
+        if(s.QP[i][0]==1&&s.QP[i][1]==1&&s.QP[i][2]==1)return 1;
+        if(s.QP[i][0]==-1&&s.QP[i][1]==-1&&s.QP[i][2]==-1)return -1;
+    }
+    for(i=0;i<3;i++)
+    {
+        if(s.QP[0][i]==1&&s.QP[1][i]==1&&s.QP[2][i]==1)return 1;
+        if(s.QP[0][i]==-1&&s.QP[1][i]==-1&&s.QP[2][i]==-1)return -1;
+    }
+    if((s.QP[0][0]==1&&s.QP[1][1]==1&&s.QP[2][2]==1)||(s.QP[2][0]==1&&s.QP[1][1]==1&&s.QP[0][2]==1))return 1;
+    if((s.QP[0][0]==-1&&s.QP[1][1]==-1&&s.QP[2][2]==-1)||(s.QP[2][0]==-1&&s.QP[1][1]==-1&&s.QP[0][2]==-1))return -1;
+    return 0;
+}
+
+int e_fun(struct State s)//评估函数
+{
+    int flag=1;
+    int i,j;
+    for(i=0;i<3;i++)
+        for(j=0;j<3;j++)
+            if(s.QP[i][j]==0)flag= FALSE;
+    if(flag)return NO_BLANK;
+
+    if(IsWin(s)==-1)return -MAX_NUM;//如果计算机输了，返回最小值
+    if(IsWin(s)==1)return MAX_NUM;//如果计算机赢了，返回最大值
+    int count=0;//该变量用来表示评估函数的值
+
+    //将棋盘中的空格填满自己的棋子，既将棋盘数组中的0变为1
+    for(i=0;i<3;i++)
+        for(j=0;j<3;j++)
+            if(s.QP[i][j]==0)tmpQP[i][j]=1;
+            else tmpQP[i][j]=s.QP[i][j];
+
+            //电脑一方
+            //计算每一行中有多少行的棋子连成3个的
+            for(i=0;i<3;i++)
+                count+=(tmpQP[i][0]+tmpQP[i][1]+tmpQP[i][2])/3;
+            //计算每一列中有多少列的棋子连成3个的
+            for(i=0;i<3;i++)
+                count+=(tmpQP[0][i]+tmpQP[1][i]+tmpQP[2][i])/3;
+            //斜行有没有连成3个的？
+            count+=(tmpQP[0][0]+tmpQP[1][1]+tmpQP[2][2])/3;
+            count+=(tmpQP[2][0]+tmpQP[1][1]+tmpQP[0][2])/3;
+
+            //将棋盘中的空格填满对方的棋子，既将棋盘数组中的0变为-1
+            for(i=0;i<3;i++)
+                for(j=0;j<3;j++)
+                    if(s.QP[i][j]==0)tmpQP[i][j]=-1;
+                    else tmpQP[i][j]=s.QP[i][j];
+
+                    //对方
+                    //计算每一行中有多少行的棋子连成3个的
+                    for(i=0;i<3;i++)
+                        count+=(tmpQP[i][0]+tmpQP[i][1]+tmpQP[i][2])/3;
+                    //计算每一列中有多少列的棋子连成3个的
+                    for(i=0;i<3;i++)
+                        count+=(tmpQP[0][i]+tmpQP[1][i]+tmpQP[2][i])/3;
+                    //斜行有没有连成3个的？
+                    count+=(tmpQP[0][0]+tmpQP[1][1]+tmpQP[2][2])/3;
+                    count+=(tmpQP[2][0]+tmpQP[1][1]+tmpQP[0][2])/3;
+
+                    return count;
+}
+
+//计算机通过该函数决定走哪一步，并对当前的棋局做出判断。
+int AutoDone()
+{
+
+    int
+        MAX_F=NO_BLANK, //保存对自己最有利的棋局（最大）的评估函数值
+        parent=-1, //以当前棋局为根生成搜索树，所以当前棋局节点无双亲节点
+        count,   //用来计算当前生成的最后一个扩展节点的下标
+
+        tag;   //标示每一层搜索树中最后一个节点的下标
+    int
+        max_min=TREE_DEPTH%2, //标识取下一层评估函数的最大值还是最小值？
+        //max_min=1取下一层中的最大值，max_min=0取最小值
+        IsOK=FALSE;    //有没有找到下一步落子的位置？
+    s_count=0;   //扩展生成的节点数初始值为0
+
+    if(IsWin(States[0])==-1)//如果人赢了
+    {
+        printf("Conguatulations! You Win! GAME OVER.\n");
+        return TRUE;
+    }
+
+    int i,j,t,k,i1,j1;
+    for(t=0;t<TREE_DEPTH;t++)//依次生成各层节点
+    {
+        count=s_count;//保存上一层节点生成的最大下标
+        for(k=parent+1;k<=count;k++)//生成一层节点
+        {
+            int n_child=0;//该层节点的孩子节点数初始化为0
+            for(i=0;i<3;i++)
+                for(j=0;j<3;j++)
+                    if(States[k].QP[i][j]==0)//如果在位置(i,j)可以放置一个棋子
+                    {       //则
+                        s_count++;    //生成一个节点，节点数（最大下标）数加1
+                        for(i1=0;i1<3;i1++) //该3×3循环将当前棋局复制到新节点对应的棋局结构中
+                            for(j1=0;j1<3;j1++)
+                                States[s_count].QP[i1][j1]=States[k].QP[i1][j1];
+                        States[s_count].QP[i][j]=t%2==0?1:-1;//根据是人下还是计算机下，在空位上落子
+                        States[s_count].parent=k;   //将父母节点的下标k赋给新生成的节点
+                        States[k].child[n_child++]=s_count; //下标为k的父母节点有多了个子女
+
+                        //如果下一步有一步期能让电脑赢，则停止扩展节点，转向结局打印语句
+                        if(t==0&&e_fun(States[s_count])==MAX_NUM)
+                        {
+                            States[k].e_fun=MAX_NUM;
+                            States[k].bestChild=s_count;//最好的下一步棋所在的节点的下标为s_count
+                            goto L2;
+                        }
+                    }
+        }
+        parent=count;   //将双亲节点设置为当前双亲节点的下一层节点
+//      printf("%d\n",s_count); //打印生成节点的最大下标
+    }
+
+    tag=States[s_count].parent;//设置最底层标志，以便从下到上计算最大最小值以寻找最佳解路径。
+    int pos_x,pos_y;//保存计算机落子的位置
+    for(i=0;i<=s_count;i++)
+    {
+        if(i>tag) //保留叶节点的评估函数值
+        {
+            States[i].e_fun=e_fun(States[i]);
+        }
+        else //抹去非叶节点的评估函数值
+            States[i].e_fun=NIL;
+    }
+    while(!IsOK)//寻找最佳落子的循环
+    {
+        for(i=s_count;i>tag;i--)
+        {
+            if(max_min)//取子女节点的最大值
+            {
+                if(States[States[i].parent].e_fun<States[i].e_fun||States[States[i].parent].e_fun==NIL)
+                {
+                    States[States[i].parent].e_fun=States[i].e_fun; //设置父母节点的最大最小值
+                    States[States[i].parent].bestChild=i;   //设置父母节点的最佳子女的下标
+                }
+            }
+            else//取子女节点的最小值
+            {
+                if(States[States[i].parent].e_fun>States[i].e_fun||States[States[i].parent].e_fun==NIL)
+                {
+                    States[States[i].parent].e_fun=States[i].e_fun; //设置父母节点的最大最小值
+                    States[States[i].parent].bestChild=i;   //设置父母节点的最佳子女的下标
+                }
+            }
+        }
+        s_count=tag; //将遍历的节点上移一层
+        max_min=!max_min; //如果该层都是MAX节点，则它的上一层都是MIN节点，反之亦然。
+        if(States[s_count].parent!=NIL)//如果当前遍历的层中不包含根节点，则tag标志设为上一层的最后一个节点的下标
+            tag=States[s_count].parent;
+        else
+            IsOK=TRUE; //否则结束搜索
+    }
+    int x,y;
+L2: //取落子的位置，将x,y坐标保存在变量pos_x和pos_y中，并将根（当前）节点中的棋局设为最佳儿子节点的棋局
+
+    for(x=0;x<3;x++)
+    {
+        for(y=0;y<3;y++)
+        {
+            if(States[States[0].bestChild].QP[x][y]!=States[0].QP[x][y])
+            {
+                pos_x=x;
+                pos_y=y;
+            }
+            States[0].QP[x][y]=States[States[0].bestChild].QP[x][y];
+        }
+    }
+
+
+    MAX_F=States[0].e_fun;
+    //cout<<MAX_F<<endl;
+
+    printf("The computer put a Chessman at: %d,%d\nThe QP now is:\n",pos_x+1,pos_y+1);
+    PrintQP();
+    if(MAX_F==MAX_NUM) //如果当前节点的评估函数为最大值，则计算机赢了
+    {
+        printf("The computer WIN! You LOSE! GAME OVER.\n");
+        return TRUE;
+    }
+    if(MAX_F==NO_BLANK) //否则，如果棋盘时候没空可放了，则平局。
+    {
+        printf("DRAW GAME!\n");
+        return TRUE;
+    }
+    return FALSE;
+}
+
+//用户通过此函数来输入落子的位置，
+//比如，用户输入31，则表示用户在第3行第1列落子。
+void UserInput(int fd_stdin,int fd_stdout)
+{
+
+    int n;
+    int pos = -1,x,y;
+    char szCmd[80]={0};
+L1: printf("Please Input The Line Position where you put your Chessman (x): ");
+    n = read(fd_stdin,szCmd,80);
+    szCmd[1] = 0;
+    atoi(szCmd,&x);
+    printf("Please Input The Column Position where you put your Chessman (y): ");
+    n = read(fd_stdin,szCmd,80);
+    szCmd[1] = 0;
+    atoi(szCmd,&y);
+    if(x>0&&x<4&&y>0&&y<4&&States[0].QP[x-1][y-1]==0)
+        States[0].QP[x-1][y-1]=-1;
+    else
+    {
+        printf("Input Error!");
+        goto L1;
+    }
+
+}
+
 void TestC()
 {
-    //char tty_name[] = ;
-	//shell("/dev_tty2");
-	assert(0);
+    spin("TestC");
+}
+
+void TTT(int fd_stdin,int fd_stdout)
+{
+    /*char tty_name[] = "/dev_tty2";
+
+    char rdbuf[128];
+
+
+    int fd_stdin  = open(tty_name, O_RDWR);
+    assert(fd_stdin  == 0);
+    int fd_stdout = open(tty_name, O_RDWR);
+    assert(fd_stdout == 1);
+
+    printf("begin!");*/
+
+    /*printl("!!!!!!!!!!!!!");*/
+    /*printf("                        ==================================\n");
+    printf("                                    File Manager           \n");
+    printf("                                 Kernel on Orange's \n\n");
+    printf("                        ==================================\n");*/
+    char buf[80]={0};
+    ///*    int i = 0;
+    //while(1){
+    //printf("C");
+    //milli_delay(200);
+    //}*/
+    char IsFirst = 0;
+    int IsFinish = FALSE;
+    while(!IsFinish)
+    {
+
+        Init();
+        printf("The QiPan (QP) is: \n");
+
+        PrintQP();
+
+        printf("Do you want do first?(y/n):");
+        read(fd_stdin,buf,2);
+        IsFirst = buf[0];
+        do{
+
+            if(IsFirst=='y')
+            {
+                UserInput(fd_stdin, fd_stdout);
+                IsFinish=AutoDone();
+            }else{
+                IsFinish=AutoDone();
+                if(!IsFinish)UserInput(fd_stdin, fd_stdout);
+            }
+
+        }while(!IsFinish);
+        if (IsFinish)
+        {
+            printf("Play Again?(y/n)");
+            char cResult;
+            read(fd_stdin,buf,2);
+            cResult = buf[0];
+            printf("%c",cResult);
+            if (cResult == 'y')
+            {
+                clear();
+                IsFinish = FALSE;
+
+            }
+            else
+            {
+                clear();
+            }
+
+        }
+    }
+
 }
 
 /*****************************************************************************
@@ -520,178 +883,29 @@ PUBLIC void panic(const char *fmt, ...)
     __asm__ __volatile__("ud2");
 }
 
-/*****************************************************************************
- *                                Custom Command
- *****************************************************************************/
-char* findpass(char *src)
-{
-    char pass[128];
-    int flag = 0;
-    char *p1, *p2;
-
-    p1 = src;
-    p2 = pass;
-
-    while (p1 && *p1 != ' ')
-    {
-        if (*p1 == ':')
-            flag = 1;
-
-        if (flag && *p1 != ':')
-        {
-            *p2 = *p1;
-            p2++;
-        }
-        p1++;
-    }
-    *p2 = '\0';
-
-    return pass;
-}
-
-void clearArr(char *arr, int length)
-{
-    int i;
-    for (i = 0; i < length; i++)
-        arr[i] = 0;
-}
-
-void printTitle()
-{
-    clear(); 	
-
-  //  disp_color_str("dddddddddddddddd\n", 0x9);
-    if(current_console==0){
-    	printf("                        ==================================\n");
-    	printf("                                   Aquinux v1.0.0             \n");
-    	printf("                                 Kernel on Orange's \n\n");
-    	printf("                                     Welcome !\n");
-    	printf("                        ==================================\n");
-    }
-    else{
-    	printf("[TTY #%d]\n", current_console);
-    }
-    
-}
-
 void clear()
-{	
-	clear_screen(0,console_table[current_console].cursor);
-    console_table[current_console].crtc_start = console_table[current_console].orig;
-    console_table[current_console].cursor = console_table[current_console].orig;    
-}
-
-void doTest(char *path)
 {
-    struct dir_entry *pde = find_entry(path);
-    printl(pde->name);
-    printl("\n");
-    printl(pde->pass);
-    printl("\n");
-}
-
-int verifyFilePass(char *path, int fd_stdin)
-{
-    char pass[128];
-
-    struct dir_entry *pde = find_entry(path);
-
-    /*printl(pde->pass);*/
-
-    if (strcmp(pde->pass, "") == 0)
-        return 1;
-
-    printl("Please input the file password: ");
-    read(fd_stdin, pass, 128);
-
-    if (strcmp(pde->pass, pass) == 0)
-        return 1;
-
-    return 0;
-}
-
-void doEncrypt(char *path, int fd_stdin)
-{
-    //查找文件
-    /*struct dir_entry *pde = find_entry(path);*/
-
-    char pass[128] = {0};
-
-    printl("Please input the new file password: ");
-    read(fd_stdin, pass, 128);
-
-    if (strcmp(pass, "") == 0)
-    {
-        /*printl("A blank password!\n");*/
-        strcpy(pass, "");
-    }
-    //以下内容用于加密
-    int i, j;
-
-    char filename[MAX_PATH];
-    memset(filename, 0, MAX_FILENAME_LEN);
-    struct inode * dir_inode;
-
-    if (strip_path(filename, path, &dir_inode) != 0)
-        return 0;
-
-    if (filename[0] == 0)   /* path: "/" */
-        return dir_inode->i_num;
-
-    /**
-     * Search the dir for the file.
-     */
-    int dir_blk0_nr = dir_inode->i_start_sect;
-    int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
-    int nr_dir_entries =
-      dir_inode->i_size / DIR_ENTRY_SIZE; /**
-                           * including unused slots
-                           * (the file has been deleted
-                           * but the slot is still there)
-                           */
-    int m = 0;
-    struct dir_entry * pde;
-    for (i = 0; i < nr_dir_blks; i++) {
-        RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-        pde = (struct dir_entry *)fsbuf;
-        for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++)
-        {
-            if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
-            {
-                //刷新文件
-                strcpy(pde->pass, pass);
-                WR_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-                return;
-                /*return pde->inode_nr;*/
-            }
-            if (++m > nr_dir_entries)
-                break;
-        }
-        if (m > nr_dir_entries) /* all entries have been iterated */
-            break;
-    }
+    clear_screen(0,console_table[current_console].cursor);
+    console_table[current_console].crtc_start = 0;
+    console_table[current_console].cursor = 0;
 
 }
 
+//void show()
+//{
+//  printf("%d  %d  %d  %d",console_table[current_console].con_size, console_table[current_console].crtc_start, console_table[current_console].cursor, console_table[current_console].orig);
+//}
 
 void help()
 {
     printf("=============================================================================\n");
     printf("Command List     :\n");
-    printf("1.  help                          : Show this help message\n");
-    printf("2.  clear                         : Clear the screen\n");
-    printf("3.  process                       : A process manage,show you all process-info\n");
-    printf("4.  ls                            : List files in current directory\n");
-    printf("5.  touch       [file]            : Create a new file\n");
-    printf("6.  cat         [file]            : Print the file\n");
-    printf("7.  vi          [file]            : Modify the content of the file\n");
-    printf("8.  rm          [file]            : Delete a file\n");
-    printf("9.  cp          [SOURCE] [DEST]   : Copy a file\n");
-    printf("10. mv          [SOURCE] [DEST]   : Move a file\n");   
-    printf("11. encrypt     [file]            : Encrypt a file\n");
-    printf("12. cd          [pathname]        : Change the directory\n");
-    printf("13. mkdir       [directory name]  : Create a new directory in current directory\n");
-    printf("14. game                          : The Minesweeper Game\n");
+    printf("1. process       : A process manage,show you all process-info here\n");
+    printf("2. filemng       : Run the file manager\n");
+    printf("3. clear         : Clear the screen\n");
+    printf("4. help          : Show this help message\n");
+//  printf("5. taskmanager   : Run a task manager,you can add or kill a process here\n");
+    printf("5. runttt        : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
 
@@ -699,219 +913,13 @@ void ProcessManage()
 {
     int i;
     printf("=============================================================================\n");
-    printf("      myID      |    name       | spriority    | running?\n");
+    printf("      PID      |    name       | spriority    | running?\n");
     //进程号，进程名，优先级，是否是系统进程，是否在运行
     printf("-----------------------------------------------------------------------------\n");
     for ( i = 0 ; i < NR_TASKS + NR_PROCS ; ++i )//逐个遍历
     {
         /*if ( proc_table[i].priority == 0) continue;//系统资源跳过*/
-        printf("        %d           %s            %d                yes\n", proc_table[i].pid, proc_table[i].name, proc_table[i].priority);
+        printf("        %d           %s            %d                %s\n", proc_table[i].pid, proc_table[i].name, proc_table[i].priority, proc_table[i].p_flags==FREE_SLOT? "NO":"YES");
     }
     printf("=============================================================================\n");
-}
-
-//游戏运行库
-unsigned int _seed2 = 0xDEADBEEF;
-
-void srand(unsigned int seed){
-	_seed2 = seed;
-}
-
-int rand() {
-	int next = _seed2;
-	int result;
-
-	next *= 1103515245;
-	next += 12345;
-	result = (next / 65536) ;
-
-	next *= 1103515245;
-	next += 12345;
-	result <<= 10;
-	result ^= (next / 65536) ;
-
-	next *= 1103515245;
-	next += 12345;
-	result <<= 10;
-	result ^= (next / 65536) ;
-
-	_seed2 = next;
-
-	return result>0 ? result : -result;
-}
-
-void show_mat(int *mat,int *mat_state, int touch_x,int touch_y,int display){
-	int x, y;
-	for (x = 0; x < 10; x++){
-		printf("  %d", x);
-	}
-	printf("\n");
-	for (x = 0; x < 10; x++){
-		printf("---");
-	}
-	for (x = 0; x < 10; x++){
-		printf("\n%d|", x);
-		for (y = 0; y < 10; y++){
-			if (mat_state[x * 10 + y] == 0){				
-					if (x == touch_x && y == touch_y)
-						printf("*  ");
-					else if (display!=0 && mat[x * 10 + y] == 1)
-						printf("#  ");
-					else
-						printf("-  ");
-				
-			}
-			else if (mat_state[x * 10 + y] == -1){
-				printf("O  ");
-			}
-			else{
-				printf("%d  ", mat_state[x * 10 + y]);
-			}
-			
-		}
-	}
-	printf("\n");
-}
-
-void init_game(int *mat, int mat_state[100]){
-	int sum = 0;
-	int x, y;
-	for (x = 0; x < 100; x++)
-		mat[x] = mat_state[x] = 0;
-	while (sum < 15){
-		x = rand() % 10;
-		y = rand() % 10;
-		if (mat[x * 10 + y] == 0){
-			sum++;
-			mat[x * 10 + y] = 1;
-		}
-	}
-	show_mat(mat,mat_state,-1,-1,0);
-	/*for (x = 0; x < 10; x++){
-		printf("  %d", x);
-	}
-	for (x = 0; x < 10; x++){
-		printf("\n%d ", x);
-		for (y = 0; y < 10; y++){
-			printf("%d  ", mat[x * 10 + y]);
-		}
-	}
-	printf("\n");*/
-}
-
-int check(int x, int y, int *mat){
-	int i, j,now_x,now_y,result = 0;
-	for (i = -1; i <= 1; i++){
-		for (j = -1; j <= 1; j++){
-			if (i == 0 && j == 0)
-				continue;
-			now_x = x + i;
-			now_y = y + j;
-			if (now_x >= 0 && now_x < 10 && now_y >= 0 && now_y <= 9){
-				if (mat[now_x * 10 + now_y] == 1)
-					result++;
-			}
-		}
-	}
-	return result;
-}
-
-void dfs(int x, int y, int *mat, int *mat_state,int *left_coin){
-	int i, j, now_x, now_y,temp;
-	if (mat_state[x*10+y] != 0)
-		return;
-	(*left_coin)--;
-	temp = check(x, y,mat);
-	if (temp != 0){
-		mat_state[x * 10 + y] = temp;
-	}
-	else{
-		mat_state[x * 10 + y] = -1;
-		for (i = -1; i <= 1; i++){
-			for (j = -1; j <= 1; j++){
-				if (i == 0 && j == 0)
-					continue;
-				now_x = x + i;
-				now_y = y + j;
-				if (now_x >= 0 && now_x < 10 && now_y >= 0 && now_y <= 9){				
-					dfs(now_x, now_y,mat,mat_state,left_coin);
-				}
-			}
-		}
-	}
-}
-
-void game(int fd_stdin){
-	int mat[100] = { 0 };
-	int mat_state[100] = { 0 };
-	char keys[128];
-	int x, y, left_coin = 100,temp;
-	int flag = 1;
-	
-	while (flag == 1){
-		init_game(mat, mat_state);
-		left_coin = 100;
-
-		printf("-------------------------------------------\n\n");
-		printf("Input next x and y: ");
-
-		while (left_coin != 15){
-
-			clearArr(keys, 128);
-            int r = read(fd_stdin, keys, 128);
-            if(keys[0]>'9'||keys[0]<'0'||keys[1]!=' '||keys[2]>'9'||keys[2]<'0'||keys[3]!=0){
-            	printf("Please input again!\n");
-				continue;
-            } 
-            x = keys[0]-'0';
-            y = keys[2]-'0';
-			if (x < 0 || x>9 || y < 0 || y>9){
-				printf("Please input again!\n");
-				continue;
-			}
-
-			if (mat[x * 10 + y] == 1){
-				break;
-			}
-			else{
-				dfs(x, y, mat, mat_state, &left_coin);
-				if (left_coin <= 15)
-					break;
-				show_mat(mat, mat_state, -1, -1, 0);
-				printf("-------------------------------------------\n\n");
-				printf("Input next x and y: ");
-				/*printf("%d\n", left_coin);
-				for (x = 0; x < 10; x++){
-
-					printf("  %d", x);
-				}
-				for (x = 0; x < 10; x++){
-					printf("\n%d ", x);
-					for (y = 0; y < 10; y++){
-						printf("%d  ", mat[x * 10 + y]);
-					}
-				}
-				printf("\n\n");*/
-			}
-		}
-		if (mat[x * 10 + y] == 1){
-			printf("\n\nFAIL!\n");
-			show_mat(mat, mat_state, x, y, 1);
-		}
-		else{
-			printf("\n\nSUCCESS!\n");
-			show_mat(mat, mat_state, -1, -1, 1);
-		}
-
-		printf("Do you want to continue?(yes ot no)\n");
-		clearArr(keys, 128);
-        int r = read(fd_stdin, keys, 128);
-      //  printf("%s\n",keys);
-        if (keys[0]=='n' && keys[1]=='o' && keys[2]==0)
-        {
-        	flag = 0;
-        //	printf("%s\n",keys);
-            break;
-        }
-	}	
 }

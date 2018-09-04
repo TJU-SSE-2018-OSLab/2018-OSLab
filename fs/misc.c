@@ -1,7 +1,7 @@
 /*************************************************************************//**
  *****************************************************************************
  * @file   misc.c
- * @brief
+ * @brief  
  * @author Forrest Y. Yu
  * @date   2008
  *****************************************************************************
@@ -24,49 +24,6 @@
 #include "hd.h"
 #include "fs.h"
 
-PUBLIC struct dir_entry * find_entry(char *path)
-{
-    int i, j;
-
-    char filename[MAX_PATH];
-    memset(filename, 0, MAX_FILENAME_LEN);
-    struct inode * dir_inode;
-    if (strip_path(filename, path, &dir_inode) != 0)
-        return 0;
-
-    if (filename[0] == 0)   /* path: "/" */
-        return dir_inode;
-
-    /**
-     * Search the dir for the file.
-     */
-    int dir_blk0_nr = dir_inode->i_start_sect;
-    int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
-    int nr_dir_entries =
-      dir_inode->i_size / DIR_ENTRY_SIZE; /**
-                           * including unused slots
-                           * (the file has been deleted
-                           * but the slot is still there)
-                           */
-    int m = 0;
-    struct dir_entry * pde;
-    for (i = 0; i < nr_dir_blks; i++) {
-        RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-        pde = (struct dir_entry *)fsbuf;
-        for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
-            if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
-                return pde;
-            if (++m > nr_dir_entries)
-                break;
-        }
-        if (m > nr_dir_entries) /* all entries have been iterated */
-            break;
-    }
-
-    /* file not found */
-    return 0;
-}
-
 /*****************************************************************************
  *                                search_file
  *****************************************************************************/
@@ -75,51 +32,51 @@ PUBLIC struct dir_entry * find_entry(char *path)
  *
  * @param[in] path The full path of the file to search.
  * @return         Ptr to the i-node of the file if successful, otherwise zero.
- *
+ * 
  * @see open()
  * @see do_open()
  *****************************************************************************/
 PUBLIC int search_file(char * path)
 {
-    int i, j;
+	int i, j;
 
-    char filename[MAX_PATH];
-    memset(filename, 0, MAX_FILENAME_LEN);
-    struct inode * dir_inode;
-    if (strip_path(filename, path, &dir_inode) != 0)
-        return 0;
+	char filename[MAX_PATH];
+	memset(filename, 0, MAX_FILENAME_LEN);
+	struct inode * dir_inode;
+	if (strip_path(filename, path, &dir_inode) != 0)
+		return 0;
 
-    if (filename[0] == 0)   /* path: "/" */
-        return dir_inode->i_num;
+	if (filename[0] == 0)	/* path: "/" */
+		return dir_inode->i_num;
 
-    /**
-     * Search the dir for the file.
-     */
-    int dir_blk0_nr = dir_inode->i_start_sect;
-    int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
-    int nr_dir_entries =
-      dir_inode->i_size / DIR_ENTRY_SIZE; /**
-                           * including unused slots
-                           * (the file has been deleted
-                           * but the slot is still there)
-                           */
-    int m = 0;
-    struct dir_entry * pde;
-    for (i = 0; i < nr_dir_blks; i++) {
-        RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
-        pde = (struct dir_entry *)fsbuf;
-        for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
-            if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
-                return pde->inode_nr;
-            if (++m > nr_dir_entries)
-                break;
-        }
-        if (m > nr_dir_entries) /* all entries have been iterated */
-            break;
-    }
+	/**
+	 * Search the dir for the file.
+	 */
+	int dir_blk0_nr = dir_inode->i_start_sect;
+	int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+	int nr_dir_entries =
+	  dir_inode->i_size / DIR_ENTRY_SIZE; /**
+					       * including unused slots
+					       * (the file has been deleted
+					       * but the slot is still there)
+					       */
+	int m = 0;
+	struct dir_entry * pde;
+	for (i = 0; i < nr_dir_blks; i++) {
+		RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+		pde = (struct dir_entry *)fsbuf;
+		for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
+			if (memcmp(filename, pde->name, MAX_FILENAME_LEN) == 0)
+				return pde->inode_nr;
+			if (++m > nr_dir_entries)
+				break;
+		}
+		if (m > nr_dir_entries) /* all entries have been iterated */
+			break;
+	}
 
-    /* file not found */
-    return 0;
+	/* file not found */
+	return 0;
 }
 
 /*****************************************************************************
@@ -148,95 +105,33 @@ PUBLIC int search_file(char * path)
  * @param[out] filename The string for the result.
  * @param[in]  pathname The full pathname.
  * @param[out] ppinode  The ptr of the dir's inode will be stored here.
- *
+ * 
  * @return Zero if success, otherwise the pathname is not valid.
  *****************************************************************************/
 PUBLIC int strip_path(char * filename, const char * pathname,
-              struct inode** ppinode)
+		      struct inode** ppinode)
 {
-    //printl("strip_path,pathname:%s\n",pathname);
-    const char * s = pathname;
-    char * t = filename;
+	const char * s = pathname;
+	char * t = filename;
 
-    if (s == 0)
-        return -1;
+	if (s == 0)
+		return -1;
 
-    if (*s == '/')
-        s++;
+	if (*s == '/')
+		s++;
 
-   /* while (*s) {        
-        if (*s == '/')
-            return -1;
-        *t++ = *s++;
-        if (t - filename >= MAX_FILENAME_LEN)
-            break;
-    }
-    *t = 0;
+	while (*s) {		/* check each character */
+		if (*s == '/')
+			return -1;
+		*t++ = *s++;
+		/* if filename is too long, just truncate it */
+		if (t - filename >= MAX_FILENAME_LEN)
+			break;
+	}
+	*t = 0;
 
-    *ppinode = root_inode;*/
+	*ppinode = root_inode;
 
-      struct inode *pinode_now = root_inode, *ptemp;
-    struct dir_entry * pde;
-    int dir_blk0_nr, nr_dir_blks, nr_dir_entries, m;
-    int i, j;
-
-    //printl("root size:%d\n", pinode_now->i_size);
-
-    while(*s){
-        if(*s == '/'){
-            /*if(*(++s)==0)
-                break;*/
-            int flag = 0;
-            dir_blk0_nr = pinode_now->i_start_sect;
-            nr_dir_blks = (pinode_now->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
-            nr_dir_entries =
-              pinode_now->i_size / DIR_ENTRY_SIZE; 
-
-            m = 0;
-            pde = 0;
-            *t = 0;
-            //printl("filename:%s\n",filename);
-            for (i = 0; i < nr_dir_blks && flag==0; i++) {
-                RD_SECT(pinode_now->i_dev, dir_blk0_nr + i);
-                pde = (struct dir_entry *)fsbuf;
-                for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++,pde++) {
-                    //printl("pde->name:%s\n", pde->name);
-                    if (strcmp(filename, pde->name) == 0){
-                        ptemp = get_inode(pinode_now->i_dev, pde->inode_nr);
-                        //printl("out\n");
-                        if(ptemp->i_mode == I_DIRECTORY){
-                           // printl("in\n");
-                            pinode_now = ptemp;
-                            flag = 1;
-                            break;
-                        }
-                        //return pde->inode_nr;
-                    }
-                    if (++m > nr_dir_entries)
-                        return -1;
-                }
-                if (m > nr_dir_entries || flag==0) {
-                   // printl("flag==0\n");
-                    return -1;
-                }
-            }
-            if(flag == 0){
-                return -1;
-            }
-            t = filename;
-
-            s++;
-        }
-        else{
-            *t++ = *s++;
-            if (t - filename >= MAX_FILENAME_LEN)
-                break;
-        }
-    }
-
-    *t = 0;
-    *ppinode = pinode_now;
-  //  printl("size:%d\n",pinode_now->i_size);
-    return 0;
+	return 0;
 }
 
