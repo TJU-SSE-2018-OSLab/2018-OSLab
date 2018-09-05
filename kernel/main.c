@@ -216,8 +216,10 @@ void TestA()
 
     char tty_name[] = "/dev_tty0";
 
-    char rdbuf[128];
-
+    char rdbuf[256];
+    char cmd[20];
+    char filename1[128];
+    char filename2[128];
 
     int fd_stdin  = open(tty_name, O_RDWR);
     assert(fd_stdin  == 0);
@@ -242,6 +244,35 @@ void TestA()
         printl("root@localhost: ", current_dirr);  // 打印当前路径
         int r = read(fd_stdin, rdbuf, 512);
         rdbuf[r] = 0;
+
+        // 解析命令
+        int pos = 0;
+        while (rdbuf[pos] != ' ' && rdbuf[pos] != 0)  // 读取指令
+        {
+            cmd[pos] = rdbuf[pos];
+            pos++;
+        }
+        if (rdbuf[pos] != 0)  // 指令还未结束
+        {
+            pos++;
+            int len = pos;
+            while (rdbuf[pos] != ' ' && rdbuf[pos] != 0)  // 读取第一个文件名
+            {
+                filename1[pos - len] = rdbuf[pos];
+                pos++;
+            }
+        }
+        if (rdbuf[pos] != 0)  // 指令还未结束
+        {
+            pos++;
+            int len = pos;
+            while (rdbuf[pos] != ' ' && rdbuf[pos] != 0)  // 读取第二个文件名
+            {
+                filename2[pos - len] = rdbuf[pos];
+                pos++;
+            }
+        }
+        printf("%s O %s O %s O");
         //show();
         if (strcmp(rdbuf, "process") == 0)
         {
