@@ -321,6 +321,10 @@ void TestA()
         {
             DeleteFile(current_dirr, filename1);
         }
+        else if (strcmp(cmd, "cat") == 0)  // 打印文件内容
+        {
+            ReadFile(current_dirr, filename1);
+        }
         else if (strcmp(cmd, "help") == 0)
         {
             help();
@@ -888,8 +892,9 @@ void help()
     printf("3. clear                  : Clear the screen\n");
     printf("4. help                   : Show this help message\n");
     printf("5. ls                     : List all files in current directory\n");
-    printf("6. touch [filename]       : Create a new file in current directory");
-    printf("7. rm [filename]          : Delete a file in current directory");
+    printf("6. touch     [filename]   : Create a new file in current directory\n");
+    printf("7. rm        [filename]   : Delete a file in current directory\n");
+    printf("8. cat       [filename]   : Print the content of a file in current directory\n");
     printf("8. runttt                 : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
@@ -937,4 +942,21 @@ void DeleteFile(char* path, char* file)
         printf("%s deleted!\n", file);
     else
         printf("Failed to delete %s!\n", file);
+}
+
+void ReadFile(char* path, char* file)
+{
+    char absoPath[512];
+    convert_to_absolute(absoPath, path, file);
+    int fd = open(absoPath, O_RDWR);
+    if (fd == -1)
+    {
+        printf("Failed to open %s!\n", file);
+        return;
+    }
+    char buf[4096];
+    int n = read(fd, buf, 4096);
+
+    printf("%s\n", buf);
+    close(fd);
 }
