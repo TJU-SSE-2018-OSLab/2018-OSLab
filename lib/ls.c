@@ -26,6 +26,7 @@ PUBLIC int ls(char* pathName)  // 传入当前目录，发送当前目录下的�
 
     msg.PATHNAME = (void*)pathName;
     msg.NAME_LEN = strlen(pathName);
+    msg.FLAGS = 0;
 
     send_recv(BOTH, TASK_FS, &msg);
 
