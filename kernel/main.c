@@ -256,7 +256,7 @@ void TestA()
         {
             ls(current_dirr);
         }
-        if (strcmp(rdbuf, "create") == 0)
+        else if (strcmp(rdbuf, "create") == 0)
         {
             printf("%s", rdbuf);
         }
