@@ -954,8 +954,15 @@ void ReadFile(char* path, char* file)
         printf("Failed to open %s!\n", file);
         return;
     }
+
     char buf[4096];
     int n = read(fd, buf, 4096);
+    if (n == -1)  // 读取文件内容失败
+    {
+        printf("An error has occured in reading the file!\n");
+        close(fd);
+        return;
+    }
 
     printf("%s\n", buf);
     close(fd);
