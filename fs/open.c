@@ -424,7 +424,7 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
  *****************************************************************************/
 PUBLIC void do_ls()
 {
-	char pathname[MAX_PATH];
+	char pathName[MAX_PATH];
 
 	// 取得message中的信息，详见lib/ls.c
 	int flages = fs_msg.FLAGS;
@@ -432,15 +432,15 @@ PUBLIC void do_ls()
 	int source = fs_msg.source;
 	assert(name_len < MAX_PATH);  // 路径名称长度不得超过最大长度
 
-	phys_copy((void*)va2la(TASK_FS, pathname), (void*)va2la(src, fs_msg.PATHNAME), name_len);
-    pathname[name_len] = 0;
+	phys_copy((void*)va2la(TASK_FS, pathName), (void*)va2la(source, fs_msg.PATHNAME), name_len);
+    pathName[name_len] = 0;
 
 	int i, j;
 
     //struct inode * dir_inode = root_inode;
     struct inode * dir_inode;
-    char filename[20];
-    strip_path(filename, pathname,&dir_inode);
+    char fileName[20];
+    strip_path(fileName, pathName,&dir_inode);
 
     int dir_blk0_nr = dir_inode->i_start_sect;
     int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
