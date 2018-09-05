@@ -236,9 +236,11 @@ void TestA()
     printf("                                     Welcome !\n");
     printf("                        ==================================\n");
 
+    char current_dirr[512] = "/";  // 记录当前路径
+
     while (1) {
-        printl("[root@localhost /] ");
-        int r = read(fd_stdin, rdbuf, 70);
+        printl("root@localhost: ", current_dirr);  // 打印当前路径
+        int r = read(fd_stdin, rdbuf, 512);
         rdbuf[r] = 0;
         //show();
         if (strcmp(rdbuf, "process") == 0)
@@ -249,11 +251,11 @@ void TestA()
         {
             printf("File Manager is already running on CONSOLE-1 ! \n");
             continue;
-
         }
         else if (strcmp(rdbuf, "ls") == 0)
         {
             printf("test ls\n");
+            ls(current_dirr);
         }
         else if (strcmp(rdbuf, "help") == 0)
         {
@@ -261,10 +263,8 @@ void TestA()
         }
         else if (strcmp(rdbuf, "runttt") == 0)
         {
-
             TTT(fd_stdin, fd_stdout);
         }
-
         else if (strcmp(rdbuf, "clear") == 0)
         {
             clear();
