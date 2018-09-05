@@ -372,6 +372,10 @@ void TestA()
 
         else
             printf("Command not found, please check!\n");
+        printf("rdbuf:      %s\n", rdbuf);
+        printf("cmd:        %s\n", cmd);
+        printf("filename1:  %s\n", filename1);
+        printf("filename2:  %s\n", filename2);
     }
 
 
