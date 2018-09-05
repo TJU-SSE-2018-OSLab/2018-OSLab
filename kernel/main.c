@@ -325,6 +325,10 @@ void TestA()
         {
             ReadFile(current_dirr, filename1);
         }
+        else if (strcmp(cmd, "vi") == 0)  // 写文件
+        {
+            WriteFile(current_dirr, filename1);
+        }
         else if (strcmp(cmd, "help") == 0)
         {
             help();
@@ -895,7 +899,8 @@ void help()
     printf("6. touch     [filename]   : Create a new file in current directory\n");
     printf("7. rm        [filename]   : Delete a file in current directory\n");
     printf("8. cat       [filename]   : Print the content of a file in current directory\n");
-    printf("8. runttt                 : Run a small game on this OS\n");
+    printf("9. vi        [filename]   : Write new content at the end of the file\n");
+    printf("10. runttt                : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
 
@@ -965,5 +970,30 @@ void ReadFile(char* path, char* file)
     }
 
     printf("%s\n", buf);
+    close(fd);
+}
+
+void WriteFile(char* path, char* file)
+{
+    char absoPath[512];
+    convert_to_absolute(absoPath, path, file);
+    int fd = open(absoPath, O_RDWR);
+    if (fd == -1)
+    {
+        printf("Failed to open %s!\n", file);
+        return;
+    }
+
+    char tty_name[] = "/dev_tty0";
+    int fd_stdin  = open(tty_name, O_RDWR);
+    if (fd_stdin == -1)
+    {
+        printf("An error has occured in writing the file!\n");
+        return;
+    }
+    char writeBuf[1024];  // 写缓冲区
+    int endPos = read(fd_stdin, writeBuf, 1024);
+    writeBuf[endPos] = 0;
+    write(fd, writeBuf, endPos + 1);  // 结束符也应写入
     close(fd);
 }
