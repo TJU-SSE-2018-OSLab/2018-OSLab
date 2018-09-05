@@ -275,6 +275,7 @@ void TestA()
             cmd[pos] = rdbuf[pos];
             pos++;
         }
+        cmd[pos] = 0;
         if (rdbuf[pos] != 0)  // 指令还未结束
         {
             pos++;
@@ -284,6 +285,7 @@ void TestA()
                 filename1[pos - len] = rdbuf[pos];
                 pos++;
             }
+            filename1[pos] = 0;
         }
         if (rdbuf[pos] != 0)  // 指令还未结束
         {
@@ -294,6 +296,7 @@ void TestA()
                 filename2[pos - len] = rdbuf[pos];
                 pos++;
             }
+            filename2[pos] = 0;
         }
         // printf("%s O %s O %s O", cmd, filename1, filename2);
         //show();
@@ -372,10 +375,10 @@ void TestA()
 
         else
             printf("Command not found, please check!\n");
-        printf("rdbuf:      %s\n", rdbuf);
-        printf("cmd:        %s\n", cmd);
-        printf("filename1:  %s\n", filename1);
-        printf("filename2:  %s\n", filename2);
+        // printf("rdbuf:      %s\n", rdbuf);
+        // printf("cmd:        %s\n", cmd);
+        // printf("filename1:  %s\n", filename1);
+        // printf("filename2:  %s\n", filename2);
     }
 
 
