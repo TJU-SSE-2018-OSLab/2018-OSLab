@@ -448,7 +448,7 @@ void TestB()
                 j++;
             }
             filename[j] = 0;
-            else if (strcmp(cmd, "read") == 0)
+            if (strcmp(cmd, "read") == 0)
             {
                 fd = open(filename, O_RDWR);
                 if (fd == -1)
