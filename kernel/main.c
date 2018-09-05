@@ -1000,7 +1000,7 @@ void CreateFile(char* path, char* file)
         return;
     }
 
-    char buf[1] = 0;
+    char buf[1] = {0};
     write(fd, buf, 1);
     printf("File created: %s (fd %d)\n", file, fd);
     close(fd);
