@@ -250,7 +250,12 @@ void TestA()
             printf("File Manager is already running on CONSOLE-1 ! \n");
             continue;
 
-        }else if (strcmp(rdbuf, "help") == 0)
+        }
+        else if (strcmp(rdbuf, "ls") == 0)
+        {
+            printf("test ls\n");
+        }
+        else if (strcmp(rdbuf, "help") == 0)
         {
             help();
         }
