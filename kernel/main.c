@@ -204,6 +204,29 @@ PUBLIC int get_ticks()
 }
 
 
+/*****************************************************************************
+ *                                convert_to_absolute
+ *                      将传入的路径和文件名组合成一个完整的绝对路径
+ *****************************************************************************/
+PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
+{
+    int i=0, j=0;
+    while (path[i] != 0)  // 写入路径
+    {
+        dest[j] = path[i];
+        j++;
+        i++;
+    }
+    i = 0;
+    while (file[i] != 0)  // 写入文件名
+    {
+        dest[j] = file[i];
+        j++;
+        i++;
+    }
+}
+
+
 /*======================================================================*
                                TestA
  *======================================================================*/
@@ -272,34 +295,34 @@ void TestA()
                 pos++;
             }
         }
-        printf("%s O %s O %s O", cmd, filename1, filename2);
+        // printf("%s O %s O %s O", cmd, filename1, filename2);
         //show();
-        if (strcmp(rdbuf, "process") == 0)
+        if (strcmp(cmd, "process") == 0)
         {
             ProcessManage();
         }
-        else if (strcmp(rdbuf, "filemng") == 0)
+        else if (strcmp(cmd, "filemng") == 0)
         {
             printf("File Manager is already running on CONSOLE-1 ! \n");
             continue;
         }
-        else if (strcmp(rdbuf, "ls") == 0)
+        else if (strcmp(cmd, "ls") == 0)
         {
             ls(current_dirr);
         }
-        else if (strcmp(rdbuf, "create") == 0)
+        else if (strcmp(cmd, "touch") == 0)  // 创建文件
         {
-            printf("%s", rdbuf);
+            CreateFile(current_dirr, filename1);
         }
-        else if (strcmp(rdbuf, "help") == 0)
+        else if (strcmp(cmd, "help") == 0)
         {
             help();
         }
-        else if (strcmp(rdbuf, "runttt") == 0)
+        else if (strcmp(cmd, "runttt") == 0)
         {
             TTT(fd_stdin, fd_stdout);
         }
-        else if (strcmp(rdbuf, "clear") == 0)
+        else if (strcmp(cmd, "clear") == 0)
         {
             clear();
             printf("                        ==================================\n");
@@ -309,7 +332,7 @@ void TestA()
             printf("                        ==================================\n");
         }
 
-        else if (strcmp(rdbuf, "getpid") == 0) {
+        else if (strcmp(cmd, "getpid") == 0) {
             printf(asm_strcat(getpid(), "\n"));
             printi(getpid());
             printf("\n");
@@ -317,7 +340,7 @@ void TestA()
             printf("\n");
         }
 
-        else if (strcmp(rdbuf, "test_fork") == 0) {
+        else if (strcmp(cmd, "test_fork") == 0) {
             int pid = fork();
             if (pid == 0) {
             } else {
@@ -325,7 +348,7 @@ void TestA()
             }
         }
 
-        else if (strcmp(rdbuf, "test_ldt") == 0) {
+        else if (strcmp(cmd, "test_ldt") == 0) {
             printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[0].ldts[INDEX_LDT_C].base_high, proc_table[0].ldts[INDEX_LDT_C].base_mid, proc_table[0].ldts[INDEX_LDT_C].base_low);
             printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[1].ldts[INDEX_LDT_C].base_high, proc_table[1].ldts[INDEX_LDT_C].base_mid, proc_table[1].ldts[INDEX_LDT_C].base_low);
             printl("{MM} base_high: %d, bsae_mid: %d, low: %d)\n", proc_table[2].ldts[INDEX_LDT_C].base_high, proc_table[2].ldts[INDEX_LDT_C].base_mid, proc_table[2].ldts[INDEX_LDT_C].base_low);
@@ -962,4 +985,23 @@ void ProcessManage()
         printf("        %d           %s            %d                %s\n", proc_table[i].pid, proc_table[i].name, proc_table[i].priority, proc_table[i].p_flags==FREE_SLOT? "NO":"YES");
     }
     printf("=============================================================================\n");
+}
+
+void CreateFile(char* path, char* file)
+{
+    char absoPath[512];
+    convert_to_absolute(absoPath, path, file);
+
+    int fd = open(absoPath, O_CREAT | O_RDWR);
+
+    if (fd == -1)
+    {
+        printf("Failed to create a new file with name %s\n", file);
+        return;
+    }
+
+    char buf[1] = 0;
+    write(fd, buf, 1);
+    printf("File created: %s (fd %d)\n", file, fd);
+    close(fd);
 }
