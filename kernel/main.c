@@ -408,7 +408,8 @@ void TestB()
             printf("2. read [filename]         : Read the file\n");
             printf("3. write [filename]        : Write at the end of the file\n");
             printf("4. delete [filename]       : Delete the file\n");
-            printf("5. help                    : Display the help message\n");
+            printf("5. ls                      : list all files in current directory\n");
+            printf("6. help                    : Display the help message\n");
             printf("==============================================================================\n");
         }
         else if (strcmp(rdbuf, "help") == 0)
