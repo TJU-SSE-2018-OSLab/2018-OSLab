@@ -254,8 +254,11 @@ void TestA()
         }
         else if (strcmp(rdbuf, "ls") == 0)
         {
-            printf("test ls\n");
             ls(current_dirr);
+        }
+        if (strcmp(rdbuf, "create") == 0)
+        {
+            printf("%s", rdbuf);
         }
         else if (strcmp(rdbuf, "help") == 0)
         {
@@ -408,7 +411,6 @@ void TestB()
             printf("2. read [filename]         : Read the file\n");
             printf("3. write [filename]        : Write at the end of the file\n");
             printf("4. delete [filename]       : Delete the file\n");
-            printf("5. ls                      : list all files in current directory\n");
             printf("6. help                    : Display the help message\n");
             printf("==============================================================================\n");
         }
@@ -910,8 +912,9 @@ void help()
     printf("2. filemng       : Run the file manager\n");
     printf("3. clear         : Clear the screen\n");
     printf("4. help          : Show this help message\n");
+    printf("5. ls                      : list all files in current directory\n");
 //  printf("5. taskmanager   : Run a task manager,you can add or kill a process here\n");
-    printf("5. runttt        : Run a small game on this OS\n");
+    printf("6. runttt        : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
 
