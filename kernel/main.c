@@ -228,7 +228,7 @@ void TestA()
     const char bufw[80] = {0};
 //  const int rd_bytes = 3;
 //  char bufr[rd_bytes];
-
+    sl();
     clear();
     printf("                        ==================================\n");
     printf("                                   MyTinix v1.0.2             \n");

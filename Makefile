@@ -29,7 +29,7 @@ OBJS		= kernel/kernel.o lib/syscall.o kernel/start.o kernel/main.o\
 			kernel/clock.o kernel/keyboard.o kernel/tty.o kernel/console.o\
 			kernel/i8259.o kernel/global.o kernel/protect.o kernel/proc.o\
 			kernel/systask.o kernel/hd.o\
-			lib/printf.o lib/vsprintf.o\
+			lib/printf.o lib/sl.o lib/vsprintf.o\
 			lib/kliba.o lib/klib.o lib/string.o lib/ls.o lib/misc.o\
 			lib/open.o lib/read.o lib/write.o lib/close.o lib/unlink.o\
 			lib/getpid.o lib/syslog.o\
@@ -156,6 +156,10 @@ lib/unlink.o: lib/unlink.c
 
 lib/ls.o: lib/ls.c
 	$(CC) $(CFLAGS) -o $@ $<
+
+lib/sl.o: lib/sl.c
+	$(CC) $(CFLAGS) -o $@ $<
+	
 
 lib/getpid.o: lib/getpid.c
 	$(CC) $(CFLAGS) -o $@ $<

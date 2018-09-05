@@ -69,3 +69,6 @@ PUBLIC  u32  wait(int *status);
 PUBLIC  u32  sleep(int seconds);
 /* lib/exit.c */
 PUBLIC  int  exit(void);
+
+/* lib/sl.c     */
+PUBLIC void     sl              ();
