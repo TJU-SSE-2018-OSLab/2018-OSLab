@@ -385,58 +385,6 @@ void TestA()
         // printf("filename2:  %s\n", filename2);
     }
 
-
-    //assert(rd_bytes <= strlen(bufw));
-
-    ///* create */
-    //fd = open(filename, O_CREAT | O_RDWR);
-    //assert(fd != -1);
-    //printl("File created: %s (fd %d)\n", filename, fd);
-    //
-
-
-    ///* write */
-    //n = write(fd, bufw, strlen(bufw));
-    //assert(n == strlen(bufw));
-
-    ///* close */
-    //close(fd);
-
-    ///* open */
-    //fd = open(filename, O_RDWR);
-    //assert(fd != -1);
-    //printl("File opened. fd: %d\n", fd);
-
-    ///* read */
-    //n = read(fd, bufr, rd_bytes);
-    //assert(n == rd_bytes);
-    //bufr[n] = 0;
-    //printl("%d bytes read: %s\n", n, bufr);
-
-    ///* close */
-    //close(fd);
-
-    //char * filenames[] = {"/foo", "/bar", "/baz"};
-
-    ///* create files */
-    //for (i = 0; i < sizeof(filenames) / sizeof(filenames[0]); i++) {
-    //  fd = open(filenames[i], O_CREAT | O_RDWR);
-    //  assert(fd != -1);
-    //  printl("File created: %s (fd %d)\n", filenames[i], fd);
-    //  close(fd);
-    //}
-
-    //char * rfilenames[] = {"/bar", "/foo", "/baz", "/dev_tty0"};
-
-    ///* remove files */
-    //for (i = 0; i < sizeof(rfilenames) / sizeof(rfilenames[0]); i++) {
-    //  if (unlink(rfilenames[i]) == 0)
-    //      printl("File removed: %s\n", rfilenames[i]);
-    //  else
-    //      printl("Failed to remove file: %s\n", rfilenames[i]);
-    //}
-
-    //spin("TestA");
 }
 
 /*======================================================================*
@@ -472,16 +420,10 @@ void TestB()
         {
             printf("=============================================================================\n");
             printf("Command List     :\n");
-            printf("1. create [filename]       : Create a new file \n");
             printf("2. read [filename]         : Read the file\n");
             printf("3. write [filename]        : Write at the end of the file\n");
-            printf("4. delete [filename]       : Delete the file\n");
             printf("6. help                    : Display the help message\n");
             printf("==============================================================================\n");
-        }
-        else if (strcmp(rdbuf, "help") == 0)
-        {
-
         }
         else
         {
@@ -502,20 +444,6 @@ void TestB()
                 j++;
             }
             filename[j] = 0;
-
-            if (strcmp(cmd, "create") == 0)
-            {
-                fd = open(filename, O_CREAT | O_RDWR);
-                if (fd == -1)
-                {
-                    printf("Failed to create file! Please check the fileaname!\n");
-                    continue ;
-                }
-                buf[0] = 0;
-                write(fd, buf, 1);
-                printf("File created: %s (fd %d)\n", filename, fd);
-                close(fd);
-            }
             else if (strcmp(cmd, "read") == 0)
             {
                 fd = open(filename, O_RDWR);
@@ -546,29 +474,11 @@ void TestB()
                 n = write(fd, rdbuf, m+1);
                 close(fd);
             }
-            else if (strcmp(cmd, "delete") == 0)
-            {
-                m=unlink(filename);
-                if (m == 0)
-                {
-                    printf("File deleted!\n");
-                    continue;
-                }
-                else
-                {
-                    printf("Failed to delete file! Please check the fileaname!\n");
-                    continue;
-                }
-
-            }
             else
             {
                 printf("Command not found, Please check!\n");
                 continue;
             }
-
-
-
         }
 
 
