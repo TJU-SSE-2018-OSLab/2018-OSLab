@@ -272,7 +272,7 @@ void TestA()
                 pos++;
             }
         }
-        printf("%s O %s O %s O");
+        printf("%s O %s O %s O", cmd, filename1, filename2);
         //show();
         if (strcmp(rdbuf, "process") == 0)
         {
