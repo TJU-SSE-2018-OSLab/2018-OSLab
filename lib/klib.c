@@ -46,7 +46,7 @@ PUBLIC void get_boot_params(struct boot_params * pbp)
      * the kernel file should be a ELF executable,
      * check it's magic number
      */
-    assert(memcmp(pbp->kernel_file, ELFMAG, SELFMAG) == 0);
+    //assert(memcmp(pbp->kernel_file, ELFMAG, SELFMAG) == 0);
 }
 
 
