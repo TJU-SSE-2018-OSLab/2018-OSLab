@@ -428,70 +428,15 @@ void TestB()
         {
             printf("=============================================================================\n");
             printf("Command List     :\n");
-            printf("2. read [filename]         : Read the file\n");
-            printf("3. write [filename]        : Write at the end of the file\n");
             printf("6. help                    : Display the help message\n");
             printf("==============================================================================\n");
         }
         else
         {
-            int fd;
-            int i = 0;
-            int j = 0;
-            char temp = -1;
-            while(rdbuf[i]!=' ')
-            {
-                cmd[i] = rdbuf[i];
-                i++;
-            }
-            cmd[i++] = 0;
-            while(rdbuf[i] != 0)
-            {
-                filename[j] = rdbuf[i];
-                i++;
-                j++;
-            }
-            filename[j] = 0;
-            if (strcmp(cmd, "read") == 0)
-            {
-                fd = open(filename, O_RDWR);
-                if (fd == -1)
-                {
-                    printf("Failed to open file! Please check the fileaname!\n");
-                    continue ;
-                }
-
-                n = read(fd, buf, 1024);
-
-                printf("%s\n", buf);
-                close(fd);
-
-            }
-            else if (strcmp(cmd, "write") == 0)
-            {
-                fd = open(filename, O_RDWR);
-                if (fd == -1)
-                {
-                    printf("Failed to open file! Please check the fileaname!\n");
-                    continue ;
-                }
-
-                m = read(fd_stdin, rdbuf,80);
-                rdbuf[m] = 0;
-
-                n = write(fd, rdbuf, m+1);
-                close(fd);
-            }
-            else
-            {
-                printf("Command not found, Please check!\n");
-                continue;
-            }
+            printf("Command not found, Please check!\n");
+            continue;
         }
-
-
     }
-
     assert(0); /* never arrive here */
 }
 
