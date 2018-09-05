@@ -317,6 +317,10 @@ void TestA()
         {
             CreateFile(current_dirr, filename1);
         }
+        else if (strcmp(cmd, "rm") == 0)  // 删除文件
+        {
+            DeleteFile(current_dirr, filename1);
+        }
         else if (strcmp(cmd, "help") == 0)
         {
             help();
@@ -968,14 +972,15 @@ void clear()
 void help()
 {
     printf("=============================================================================\n");
-    printf("Command List     :\n");
-    printf("1. process       : A process manage,show you all process-info here\n");
-    printf("2. filemng       : Run the file manager\n");
-    printf("3. clear         : Clear the screen\n");
-    printf("4. help          : Show this help message\n");
-    printf("5. ls                      : list all files in current directory\n");
-//  printf("5. taskmanager   : Run a task manager,you can add or kill a process here\n");
-    printf("6. runttt        : Run a small game on this OS\n");
+    printf("Command List              :\n");
+    printf("1. process                : A process manage,show you all process-info here\n");
+    printf("2. filemng                : Run the file manager\n");
+    printf("3. clear                  : Clear the screen\n");
+    printf("4. help                   : Show this help message\n");
+    printf("5. ls                     : List all files in current directory\n");
+    printf("6. touch [filename]       : Create a new file in current directory");
+    printf("7. rm [filename]          : Delete a file in current directory");
+    printf("8. runttt                 : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
 
@@ -1011,4 +1016,15 @@ void CreateFile(char* path, char* file)
     write(fd, buf, 1);
     printf("File created: %s (fd %d)\n", file, fd);
     close(fd);
+}
+
+void DeleteFile(char* path, char* file)
+{
+    char absoPath[512];
+    convert_to_absolute(absoPath, path, file);
+    int m=unlink(absoPath);
+    if (m == 0)
+        printf("%s deleted!\n", file);
+    else
+        printf("Failed to delete %s!\n", file);
 }
