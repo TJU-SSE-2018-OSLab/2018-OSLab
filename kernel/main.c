@@ -937,7 +937,6 @@ void WriteFile(char* path, char* file)
         return;
     }
     char writeBuf[4096];  // 写缓冲区
-    int n = read(fd, fd_stdin, 4096);  // 读入文件原有内容
     int endPos = read(fd_stdin, writeBuf, 4096);
     writeBuf[endPos] = 0;
     write(fd, writeBuf, endPos + 1);  // 结束符也应写入
