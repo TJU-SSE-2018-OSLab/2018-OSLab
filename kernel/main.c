@@ -261,7 +261,7 @@ void TestA()
     char current_dirr[512] = "/";  // 记录当前路径（其实路径字符长度上限为MAX_PATH）
 
     while (1) {
-        printl("root@localhost: ", current_dirr);  // 打印当前路径
+        printl("[root@localhost]: ", current_dirr);  // 打印当前路径
         int r = read(fd_stdin, rdbuf, 512);
         rdbuf[r] = 0;
 
@@ -329,6 +329,10 @@ void TestA()
         else if(strcmp(cmd, "mkdir") == 0)  // 创建目录
         {
             CreateDir(current_dirr, filename1);
+        }
+        else if(strcmp(cmd, "cd") == 0)
+        {
+            GoDir(current_dirr, filename1);
         }
         else if (strcmp(cmd, "help") == 0)
         {
@@ -494,7 +498,8 @@ void help()
     printf("8. cat       [filename]   : Print the content of a file in current directory\n");
     printf("9. vi        [filename]   : Write new content at the end of the file\n");
     printf("10. mkdir    [dirname]    : Create a new directory in current directory\n");
-    printf("11. runttt                : Run a small game on this OS\n");
+    printf("11. cd       [dirname]    : Go to a directory in current directory\n");
+    printf("12. runttt                : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
 
@@ -597,4 +602,15 @@ void CreateDir(char* path, char* file)
     char absoPath[512];
     convert_to_absolute(absoPath, path, file);
     mkdir(absoPath);
+}
+
+void GoDir(char* path, char* file)
+{
+    char absoPath[512];
+    convert_to_absolute(absoPath, path, file);
+    int fd = open(absoPath, O_RDWR);
+    if (fd == -1)
+        printf("%s is not a directory!\n", absoPath);
+    else
+        memcpy(path, absoPath, 512);
 }
