@@ -262,7 +262,7 @@ void TestA()
     char current_dirr[512] = "/";  // 记录当前路径（其实路径字符长度上限为MAX_PATH）
 
     while (1) {
-        printl("[root@localhost]: ", current_dirr);  // 打印当前路径
+        printf("[root@localhost]: %s", current_dirr);  // 打印当前路径
         int r = read(fd_stdin, rdbuf, 512);
         rdbuf[r] = 0;
 
