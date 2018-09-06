@@ -25,11 +25,12 @@ void merge2048(void);
 
 PUBLIC void start2048Game(int fd_stdin, int fd_stdout) {
     // Specify the rules of the game
-    printf("By DerekDick\n");
+    
+    clear();
     printf("Welcome to 2048 Game!\n");
-    printf("Press w/a/s/d and enter key to move the blocks.\n");
-    printf("For example, if you want to move left, just press \"a\" and the enter key.\n");
-
+    printf("Control:\n");
+    printf("             LEFT: a    RIGHT: d\n");
+    printf("             UP:   w    DOWN:  s\n\n\n");
     // Initialize the data
     initData();
 
@@ -41,12 +42,18 @@ PUBLIC void start2048Game(int fd_stdin, int fd_stdout) {
     // Turns in loops
     // while (scanf(" %c", &option)) {
     while (read(fd_stdin, option2048, 2)) {
+        
+        clear();
+        printf("Welcome to 2048 Game!\n");
+        printf("Control:\n");
+        printf("             LEFT: a    RIGHT: d\n");
+        printf("             UP:   w    DOWN:  s\n\n\n");
         // Check if the player is dead
         if (!isAlive2048()) {
             printf("You lose!!!\a\n");
             break;
         }
-        clear();
+
         morge2048();
         if (validity2048) {
             addrandom2048();
@@ -131,16 +138,18 @@ void printNums2048(void) {
     /* Prints out the blocks of numbers */
     
     int i, j;
+    printf("---------------------\n");
     for (i = 0; i <= 3; i++) {
+        printf("|");
         for (j = 0; j <= 3; j++) {
             if (numbers2048[i][j] != 0) {
-                printf("%7d", numbers2048[i][j]);
+                printf("%4d|", numbers2048[i][j]);
             }
             else {
-                printf("       ");
+                printf("    |");
             }
         }
-        printf("\n");
+        printf("\n|----|----|----|----|\n");
     }
     printf("Score: %d\n", score2048);
 
