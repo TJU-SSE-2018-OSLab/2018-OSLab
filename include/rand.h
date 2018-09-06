@@ -1,10 +1,3 @@
-/********************************************
- * @file   rand.h
- * @brief  Simple implementation of rand(reference: 
- *     https://stackoverflow.com/questions/4768180/rand-implementation/)
- * @author Jianfeng HOU
- *******************************************/
-
 #ifndef _RAND_H_
 #define _RNAD_H_
 
