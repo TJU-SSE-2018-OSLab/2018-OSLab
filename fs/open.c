@@ -422,7 +422,7 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
  * list all the files in the directory
  * 
  *****************************************************************************/
-PUBLIC void do_ls()
+PUBLIC int do_ls()
 {
 	char pathName[MAX_PATH];
 
@@ -471,6 +471,7 @@ PUBLIC void do_ls()
     }
 
     printl("============================\n");
+	return 0;
 }
 
 /*****************************************************************************

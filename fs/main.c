@@ -98,6 +98,7 @@ PUBLIC void task_fs()
 		msg_name[LSEEK]  = "LSEEK";
 		msg_name[UNLINK] = "UNLINK";
 		msg_name[LS] = "LS";
+		msg_name[MKDIR] = "MKDIR";
 		/* msg_name[FORK]   = "FORK"; */
 		/* msg_name[EXIT]   = "EXIT"; */
 		/* msg_name[STAT]   = "STAT"; */
