@@ -472,3 +472,36 @@ PUBLIC void do_ls()
 
     printl("============================\n");
 }
+
+/*****************************************************************************
+ *                                do_mkdir
+ *****************************************************************************/
+/**
+ * make a new directory in the directory
+ * 
+ *****************************************************************************/
+PUBLIC int do_mkdir()
+{
+	char pathName[MAX_PATH];
+
+	// 取得message中的信息，详见lib/ls.c
+	int flages = fs_msg.FLAGS;
+	int name_len = fs_msg.NAME_LEN;
+	int source = fs_msg.source;
+	assert(name_len < MAX_PATH);  // 路径名称长度不得超过最大长度
+
+	phys_copy((void*)va2la(TASK_FS, pathName), (void*)va2la(source, fs_msg.PATHNAME), name_len);
+    pathName[name_len] = 0;
+
+	struct inode* dir_inode = create_file(pathName, flages);
+	if (dir_inode)
+	{
+		printl("creating directory %s succeeded!\n", pathName);
+		return 0;
+	}
+	else
+	{
+		printl("creating directory %s failed!\n", pathName);
+		return -1;
+	}
+}

@@ -65,6 +65,9 @@ PUBLIC void task_fs()
 		case LS:
 			fs_msg.RETVAL = do_ls();
 			break;
+		case MKDIR:
+			fs_msg.RETVAL = do_mkdir();
+			break;
 		case RESUME_PROC:
 			src = fs_msg.PROC_NR;
 			break;

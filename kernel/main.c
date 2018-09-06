@@ -329,6 +329,10 @@ void TestA()
         {
             WriteFile(current_dirr, filename1);
         }
+        else if(strcmp(cmd, "mkdir") == 0)  // 创建目录
+        {
+            CreateDir(current_dirr, filename1);
+        }
         else if (strcmp(cmd, "help") == 0)
         {
             help();
@@ -845,7 +849,8 @@ void help()
     printf("7. rm        [filename]   : Delete a file in current directory\n");
     printf("8. cat       [filename]   : Print the content of a file in current directory\n");
     printf("9. vi        [filename]   : Write new content at the end of the file\n");
-    printf("10. runttt                : Run a small game on this OS\n");
+    printf("10. mkdir    [dirname]    : Create a new directory in current directory\n");
+    printf("11. runttt                : Run a small game on this OS\n");
     printf("==============================================================================\n");
 }
 
@@ -941,4 +946,11 @@ void WriteFile(char* path, char* file)
     writeBuf[endPos] = 0;
     write(fd, writeBuf, endPos + 1);  // 结束符也应写入
     close(fd);
+}
+
+void CreateDir(char* path, char* file)
+{
+    char absoPath[512];
+    convert_to_absolute(absoPath, path, file);
+    mkdir(absoPath);
 }
