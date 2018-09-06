@@ -224,6 +224,7 @@ PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
         j++;
         i++;
     }
+    dest[j] = 0;  // 结束符
 }
 
 
