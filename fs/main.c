@@ -19,7 +19,6 @@
 #include "console.h"
 #include "global.h"
 #include "proto.h"
-
 #include "hd.h"
 
 PRIVATE void init_fs();

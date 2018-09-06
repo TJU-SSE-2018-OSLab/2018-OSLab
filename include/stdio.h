@@ -73,5 +73,9 @@ PUBLIC  int  exit(void);
 /* lib/sl.c     */
 PUBLIC void     sl              ();
 
-/* game/sl.c     */
+/* game/TTT.c     */
 PUBLIC void     TTT              ();
+
+
+// /* game/2048Game.c     */
+//  PUBLIC void     start2048Game              (int fd_stdin, int fd_stdout);
