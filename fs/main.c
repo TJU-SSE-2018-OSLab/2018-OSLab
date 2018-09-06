@@ -106,6 +106,7 @@ PUBLIC void task_fs()
 		case CLOSE:
 		case UNLINK:
 		case LS:
+		case MKDIR:
 			//dump_fd_graph("%s just finished.", msg_name[msgtype]);
 			//panic("");
 		case OPEN:
