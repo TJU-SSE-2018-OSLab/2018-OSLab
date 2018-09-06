@@ -234,10 +234,10 @@ PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
 //1号终端
 void TestA()
 {
-    int fd;
-    int i, n;
+    // int fd;
+    // int i, n;
 
-    char tty_name[] = "/dev_tty0";
+    // char tty_name[] = "/dev_tty0";
 
     char rdbuf[256];
     char cmd[20];
@@ -285,7 +285,7 @@ void TestA()
                 filename1[pos - len] = rdbuf[pos];
                 pos++;
             }
-            filename1[pos] = 0;
+            filename1[pos - len] = 0;
         }
         if (rdbuf[pos] != 0)  // 指令还未结束
         {
@@ -296,7 +296,7 @@ void TestA()
                 filename2[pos - len] = rdbuf[pos];
                 pos++;
             }
-            filename2[pos] = 0;
+            filename2[pos - len] = 0;
         }
         // printf("%s O %s O %s O", cmd, filename1, filename2);
         //show();
