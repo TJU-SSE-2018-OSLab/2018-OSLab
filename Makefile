@@ -157,7 +157,7 @@ lib/unlink.o: lib/unlink.c
 lib/ls.o: lib/ls.c
 	$(CC) $(CFLAGS) -o $@ $<
 
-lib/mkdir.o: lib/mkdir.clean
+lib/mkdir.o: lib/mkdir.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 lib/sl.o: lib/sl.c
