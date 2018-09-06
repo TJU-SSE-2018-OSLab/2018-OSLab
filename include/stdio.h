@@ -72,3 +72,6 @@ PUBLIC  int  exit(void);
 
 /* lib/sl.c     */
 PUBLIC void     sl              ();
+
+/* game/sl.c     */
+PUBLIC void     TTT              ();
