@@ -16,7 +16,7 @@
 #include "console.h"
 #include "global.h"
 #include "proto.h"
-
+#include "2048Game.h"
 
 /*======================================================================*
                             kernel_main
@@ -337,6 +337,10 @@ void TestA()
         else if (strcmp(cmd, "runttt") == 0)
         {
             TTT(fd_stdin, fd_stdout);
+        }
+        else if (strcmp(cmd, "run2048") == 0)
+        {
+            start2048Game(fd_stdin, fd_stdout);
         }
         else if (strcmp(cmd, "clear") == 0)
         {

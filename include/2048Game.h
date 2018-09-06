@@ -46,7 +46,7 @@ PUBLIC void start2048Game(int fd_stdin, int fd_stdout) {
             printf("You lose!!!\a\n");
             break;
         }
-
+        clear();
         morge2048();
         if (validity2048) {
             addrandom2048();
