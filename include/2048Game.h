@@ -27,10 +27,11 @@ PUBLIC void start2048Game(int fd_stdin, int fd_stdout) {
     // Specify the rules of the game
     
     clear();
-    printf("Welcome to 2048 Game!\n");
+    printf("Welcome to 2048 Game!\n\n\n");
     printf("Control:\n");
     printf("             LEFT: a    RIGHT: d\n");
-    printf("             UP:   w    DOWN:  s\n\n\n");
+    printf("             UP:   w    DOWN:  s\n");
+    printf("             EXIT: press enter  \n\n\n");
     // Initialize the data
     initData();
 
@@ -44,10 +45,11 @@ PUBLIC void start2048Game(int fd_stdin, int fd_stdout) {
     while (read(fd_stdin, option2048, 2)) {
         
         clear();
-        printf("Welcome to 2048 Game!\n");
-        printf("Control:\n");
+        printf("Welcome to 2048 Game!!!\n\n\n");
+        printf("Controls:\n");
         printf("             LEFT: a    RIGHT: d\n");
-        printf("             UP:   w    DOWN:  s\n\n\n");
+        printf("             UP:   w    DOWN:  s\n");
+        printf("             EXIT: press enter  \n\n\n");
         // Check if the player is dead
         if (!isAlive2048()) {
             printf("You lose!!!\a\n");
@@ -62,6 +64,7 @@ PUBLIC void start2048Game(int fd_stdin, int fd_stdout) {
         
         printNums2048();
     }
+    clear();
 }
 
 void morge2048(void) {
@@ -138,9 +141,9 @@ void printNums2048(void) {
     /* Prints out the blocks of numbers */
     
     int i, j;
-    printf("---------------------\n");
+    printf("             ---------------------\n");
     for (i = 0; i <= 3; i++) {
-        printf("|");
+        printf("             |");
         for (j = 0; j <= 3; j++) {
             if (numbers2048[i][j] != 0) {
                 printf("%4d|", numbers2048[i][j]);
@@ -149,7 +152,7 @@ void printNums2048(void) {
                 printf("    |");
             }
         }
-        printf("\n|----|----|----|----|\n");
+        printf("\n             |----|----|----|----|\n");
     }
     printf("Score: %d\n", score2048);
 
