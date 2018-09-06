@@ -234,10 +234,7 @@ PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
 //1号终端
 void TestA()
 {
-    // int fd;
-    // int i, n;
-
-    // char tty_name[] = "/dev_tty0";
+    char tty_name[] = "/dev_tty0";
 
     char rdbuf[256];
     char cmd[20];
