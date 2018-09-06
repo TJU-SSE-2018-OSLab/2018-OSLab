@@ -256,7 +256,7 @@ void TestA()
     sl();
     clear();
     printf("                        ==================================\n");
-    printf("                                   MyTinix v1.0.2             \n");
+    printf("                                     Geniux v1.0.0         \n");
     printf("                                 Kernel on Orange's \n\n");
     printf("                                     Welcome !\n");
     printf("                        ==================================\n");
@@ -341,7 +341,7 @@ void TestA()
         {
             clear();
             printf("                        ==================================\n");
-            printf("                                   MyTinix v1.0.2             \n");
+            printf("                                     Geniux v1.0.0         \n");
             printf("                                 Kernel on Orange's \n\n");
             printf("                                     Welcome !\n");
             printf("                        ==================================\n");
@@ -834,7 +834,7 @@ void clear()
 
 void help()
 {
-    printf("=============================================================================\n");
+    printf("==========================Geniux help info====================================\n");
     printf("Command List              :\n");
     printf("1. process                : A process manage,show you all process-info here\n");
     printf("2. filemng                : Run the file manager\n");
