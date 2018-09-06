@@ -113,8 +113,10 @@ PUBLIC int strip_path(char * filename, const char * pathname,
 {
     const char * s = pathname;
     char * t = filename;
+	printl("pathname: %s\n", pathname);
+	printl("filename: %s\n", filename);
 
-    if (s == 0)
+	if (s == 0)
         return -1;
 
     if (*s == '/')
