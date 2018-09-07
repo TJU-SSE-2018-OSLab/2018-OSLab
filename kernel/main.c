@@ -217,7 +217,8 @@ PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
         j++;
         i++;
     }
-    dest[j++] = '/';
+    if(!(path[0] == '/' && path[1] == 0))  // 根目录
+        dest[j++] = '/';
     i = 0;
     while (file[i] != 0)  // 写入文件名
     {
