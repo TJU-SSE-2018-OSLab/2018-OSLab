@@ -217,7 +217,6 @@ PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
         j++;
         i++;
     }
-    dest[j++] = '/';
     i = 0;
     while (file[i] != 0)  // 写入文件名
     {
@@ -263,7 +262,7 @@ void TestA()
     char current_dirr[512] = "/";  // 记录当前路径（其实路径字符长度上限为MAX_PATH）
 
     while (1) {
-        printf("[root@localhost: %s]", current_dirr+1);  // 打印当前路径
+        printf("[root@localhost: %s]", current_dirr);  // 打印当前路径
         int r = read(fd_stdin, rdbuf, 512);
         rdbuf[r] = 0;
 
@@ -607,21 +606,23 @@ void CreateDir(char* path, char* file)
 {
     char absoPath[512];
     convert_to_absolute(absoPath, path, file);
-    if (absoPath[0] == '/' && absoPath[1] == '/')
-        mkdir(absoPath+1);
-    else
-        mkdir(absoPath);
+    mkdir(absoPath);
 }
 
 void GoDir(char* path, char* file)
 {
     char absoPath[512];
-    convert_to_absolute(absoPath, path, file);
-    int fd;
-    if (absoPath[0] == '/' && absoPath[1] == '/')
-        fd = open(absoPath+1, O_RDWR);
-    else
-        fd = open(absoPath, O_RDWR);
+    char temp[512];
+    int pos = 0;
+    while (path[pos] != 0)
+    {
+        temp[pos] = path[pos];
+        pos++;
+    }
+    temp[pos] = '/';
+    temp[pos + 1] = 0;
+    convert_to_absolute(absoPath, temp, file);
+    int fd = open(absoPath, O_RDWR);
     if (fd == -1)
         printf("%s is not a directory!\n", absoPath);
     else
