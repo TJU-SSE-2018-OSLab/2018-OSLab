@@ -616,12 +616,12 @@ void GoDir(char* path, char* file)
     int pos = 0;
     while (path[pos] != 0)
     {
-        temp[pos] = path[pos];
+        temp[pos] = file[pos];
         pos++;
     }
     temp[pos] = '/';
     temp[pos + 1] = 0;
-    convert_to_absolute(absoPath, temp, file);
+    convert_to_absolute(absoPath, path, temp);
     int fd = open(absoPath, O_RDWR);
     if (fd == -1)
         printf("%s is not a directory!\n", absoPath);
