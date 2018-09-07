@@ -356,6 +356,10 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect, int imod
 	new_inode->i_dev = dev;
 	new_inode->i_cnt = 1;
 	new_inode->i_num = inode_nr;
+	
+	
+	new_inode->i_node_length = 0;
+    new_inode->i_sects_pos[0] = start_sect;
 
 	/* write to the inode array */
 	sync_inode(new_inode);
