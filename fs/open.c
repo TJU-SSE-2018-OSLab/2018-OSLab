@@ -121,7 +121,7 @@ PUBLIC int do_open()
 				  &driver_msg);
 		}
 		else if (imode == I_DIRECTORY) {
-			assert(pin->i_num == ROOT_INODE);
+			// assert(pin->i_num == ROOT_INODE);
 		}
 		else {
 			assert(pin->i_mode == I_REGULAR);
