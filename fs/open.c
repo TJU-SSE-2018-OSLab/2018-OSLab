@@ -326,7 +326,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
 			break;
 	}
 
-	assert(nr_sects_to_alloc == 0);
+	// assert(nr_sects_to_alloc == 0);
 
 	return free_sect_nr;
 }
