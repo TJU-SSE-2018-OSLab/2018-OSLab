@@ -447,8 +447,9 @@ PUBLIC int do_ls()
     struct inode * dir_inode;  // 需要令它指向当前的目录节点
     char fileName[20];
     strip_path(fileName, pathName,&dir_inode);
+	printl("after strip, inode number: %d\n", dir_inode->i_num);
 
-    int dir_blk0_nr = dir_inode->i_start_sect;
+	int dir_blk0_nr = dir_inode->i_start_sect;
     int nr_dir_blks = (dir_inode->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
     int nr_dir_entries = dir_inode->i_size / DIR_ENTRY_SIZE;
     int m = 0;
