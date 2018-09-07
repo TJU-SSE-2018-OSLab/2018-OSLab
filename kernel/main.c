@@ -636,9 +636,11 @@ void GoDir(char* path, char* file)
                     while (temp[i] != 0)
                     {
                         newPath[pos_new] = temp[i];
+                        temp[i] = 0;  // 抹掉
                         pos_new++;
                         i++;
                     }
+                    i = 0;
                 }
             }
             else
