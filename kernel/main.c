@@ -614,7 +614,7 @@ void GoDir(char* path, char* file)
     char absoPath[512];
     char temp[512];
     int pos = 0;
-    while (path[pos] != 0)
+    while (file[pos] != 0)
     {
         temp[pos] = file[pos];
         pos++;
