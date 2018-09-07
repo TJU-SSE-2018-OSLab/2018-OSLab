@@ -122,7 +122,7 @@ PUBLIC int strip_path(char * filename, const char * pathname,
     if (*s == '/')
         s++;
 
-    while (*s) {        
+    /* while (*s) {        
         if (*s == '/')
             return -1;
         *t++ = *s++;
@@ -131,9 +131,9 @@ PUBLIC int strip_path(char * filename, const char * pathname,
     }
     *t = 0;
 
-    *ppinode = root_inode;
+    *ppinode = root_inode; */
 
-    /* struct inode *pinode_now = root_inode, *ptemp;
+    struct inode *pinode_now = root_inode, *ptemp;
     struct dir_entry * pde;
     int dir_blk0_nr, nr_dir_blks, nr_dir_entries, m;
     int i, j;
@@ -184,7 +184,7 @@ PUBLIC int strip_path(char * filename, const char * pathname,
     }
 
     *t = 0;
-    *ppinode = pinode_now; */
+    *ppinode = pinode_now;
     return 0;
 }
 
