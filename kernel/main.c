@@ -607,6 +607,13 @@ void CreateDir(char* path, char* file)
 {
     char absoPath[512];
     convert_to_absolute(absoPath, path, file);
+    int fd = open(absoPath, O_CREAT | O_RDWR);
+
+    if (fd == -1)
+    {
+        printf("Failed to create a new directory with name %s\n", file);
+        return;
+    }
     mkdir(absoPath);
 }
 
