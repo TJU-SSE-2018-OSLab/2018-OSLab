@@ -505,6 +505,7 @@ void help()
     printf("10. mkdir    [dirname]    : Create a new directory in current directory\n");
     printf("11. cd       [dirname]    : Go to a directory in current directory\n");
     printf("12. runttt                : Run a small game on this OS\n");
+    printf("13. run2048               : Run a 2048 game on this OS\n");
     printf("==============================================================================\n");
 }
 
