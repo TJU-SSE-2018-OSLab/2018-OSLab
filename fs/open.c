@@ -24,10 +24,12 @@
 #include "keyboard.h"
 #include "proto.h"
 
+#define ISDIR -66378
+
 PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
-PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect);
+PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect, int imode);
 PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filename);
 
 /*****************************************************************************
@@ -158,8 +160,11 @@ PRIVATE struct inode * create_file(char * path, int flags)
 	int inode_nr = alloc_imap_bit(dir_inode->i_dev);
 	int free_sect_nr = alloc_smap_bit(dir_inode->i_dev,
 					  NR_DEFAULT_FILE_SECTS);
-	struct inode *newino = new_inode(dir_inode->i_dev, inode_nr,
-					 free_sect_nr);
+	struct inode* newino;
+	if (flags == ISDIR)
+		newino = new_inode(dir_inode->i_dev, inode_nr, free_sect_nr, I_DIRECTORY);
+	else
+		newino = new_inode(dir_inode->i_dev, inode_nr, free_sect_nr, I_REGULAR);
 
 	new_dir_entry(dir_inode, newino->i_num, filename);
 
@@ -335,14 +340,15 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
  * @param dev  Home device of the i-node.
  * @param inode_nr  I-node nr.
  * @param start_sect  Start sector of the file pointed by the new i-node.
+ * @param imode  i_mode type
  * 
  * @return  Ptr of the new i-node.
  *****************************************************************************/
-PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect)
+PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect, int imode)
 {
 	struct inode * new_inode = get_inode(dev, inode_nr);
 
-	new_inode->i_mode = I_REGULAR;
+	new_inode->i_mode = imode;
 	new_inode->i_size = 0;
 	new_inode->i_start_sect = start_sect;
 	new_inode->i_nr_sects = NR_DEFAULT_FILE_SECTS;
@@ -494,7 +500,7 @@ PUBLIC int do_mkdir()
 	phys_copy((void*)va2la(TASK_FS, pathName), (void*)va2la(source, fs_msg.PATHNAME), name_len);
     pathName[name_len] = 0;
 
-	struct inode* dir_inode = create_file(pathName, flages);
+	struct inode* dir_inode = create_file(pathName, ISDIR);
 	if (dir_inode)
 	{
 		printl("creating directory %s succeeded!\n", pathName);
