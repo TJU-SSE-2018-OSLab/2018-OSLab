@@ -505,6 +505,7 @@ void help()
     printf("10. mkdir    [dirname]    : Create a new directory in current directory\n");
     printf("11. cd       [dirname]    : Go to a directory in current directory\n");
     printf("12. runttt                : Run a small game on this OS\n");
+    printf("13. run2048               : Run 2048 game on this OS\n");
     printf("==============================================================================\n");
 }
 
@@ -614,6 +615,7 @@ void GoDir(char* path, char* file)
     char absoPath[512];
     char temp[512];
     int pos = 0;
+    printf("test::\n");
     while (file[pos] != 0)
     {
         temp[pos] = file[pos];

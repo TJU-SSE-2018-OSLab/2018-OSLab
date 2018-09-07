@@ -528,6 +528,7 @@ PUBLIC struct inode * get_inode(int dev, int num)
 	q->i_size = pinode->i_size;
 	q->i_start_sect = pinode->i_start_sect;
 	q->i_nr_sects = pinode->i_nr_sects;
+	q->i_node_length = pinode->i_node_length;            /**< sect lenghth */
 	return q;
 }
 
@@ -570,6 +571,9 @@ PUBLIC void sync_inode(struct inode * p)
 	pinode->i_size = p->i_size;
 	pinode->i_start_sect = p->i_start_sect;
 	pinode->i_nr_sects = p->i_nr_sects;
+	
+	pinode->i_node_length = p->i_node_length;
+    pinode->i_sects_pos[0] = p->i_sects_pos[p->i_node_length];
 	WR_SECT(p->i_dev, blk_nr);
 }
 

@@ -78,6 +78,9 @@ struct inode {
 	u32	i_start_sect;	/**< The first sector of the data */
 	u32	i_nr_sects;	/**< How many sectors the file occupies */
 	u8	_unused[16];	/**< Stuff for alignment */
+	
+	u32 i_node_length;            /**< sect lenghth */
+	u32 i_sects_pos[20];         /**< sect pos array */
 
 	/* the following items are only present in memory */
 	int	i_dev;
