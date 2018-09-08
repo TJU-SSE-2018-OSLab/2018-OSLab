@@ -468,15 +468,19 @@ PUBLIC int do_ls()
         RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 
         pde = (struct dir_entry *)fsbuf;
-
         for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++)
         {
+			if (pde->inode_nr == 0)
+				break;
             printl("  %2d        %s\n", pde->inode_nr , pde->name);
             if (++m >= nr_dir_entries){
                 printl("\n");
                 break;
             }
         }
+		// printl("%2d \n",k);
+		// printl("%2d \n",SECTOR_SIZE);
+		// printl("%2d \n",DIR_ENTRY_SIZE);
         if (m > nr_dir_entries) //[> all entries have been iterated <]
             break;
     }
