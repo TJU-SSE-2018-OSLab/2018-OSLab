@@ -20,6 +20,29 @@
 #include "keyboard.h"
 #include "proto.h"
 
+/*****************************************************************************
+ *                                convert_to_absolute
+ *                      将传入的路径和文件名组合成一个完整的绝对路径
+ *****************************************************************************/
+PUBLIC void convert_to_absolute(char* dest, char* path, char* file)
+{
+    int i=0, j=0;
+    while (path[i] != 0)  // 写入路径
+    {
+        dest[j] = path[i];
+        j++;
+        i++;
+    }
+    i = 0;
+    while (file[i] != 0)  // 写入文件名
+    {
+        dest[j] = file[i];
+        j++;
+        i++;
+    }
+    dest[j] = 0;  // 结束符
+}
+
 
 /*****************************************************************************
  *                                do_unlink
@@ -64,11 +87,40 @@ PUBLIC int do_unlink()
 
 	struct inode * pin = get_inode(dir_inode->i_dev, inode_nr);
 
-	if (pin->i_mode != I_REGULAR) { /* can only remove regular files */
+	if (pin->i_mode == I_CHAR_SPECIAL) { /* can only remove regular files */
 		printl("cannot remove file %s, because "
 		       "it is not a regular file.\n",
 		       pathname);
 		return -1;
+	}
+	else if (pin->i_mode == I_DIRECTORY)
+	{
+		int dir_blk0_nr = pin->i_start_sect;
+		int nr_dir_blks = (pin->i_size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+		int nr_dir_entries = pin->i_size / DIR_ENTRY_SIZE;
+		int m = 0, i, j;
+
+		struct dir_entry * pde;
+
+		for (i = 0; i < nr_dir_blks; i++)
+		{
+			RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
+
+			pde = (struct dir_entry *)fsbuf;
+			for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++)
+			{
+				if (pde->inode_nr == 0)
+					continue;
+				char* path[512];
+				convert_to_absolute(path, pathname, pde->name);
+				unlink(path);
+				if (++m >= nr_dir_entries)
+					break;
+			}
+
+			if (m > nr_dir_entries) //[> all entries have been iterated <]
+				break;
+		}
 	}
 
 	if (pin->i_cnt > 1) {	/* the file was opened */
