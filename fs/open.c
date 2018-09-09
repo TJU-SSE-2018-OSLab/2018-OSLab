@@ -479,10 +479,6 @@ PUBLIC int do_ls()
 			//else
 				//printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
 			struct inode * p;
-			for (p = &inode_table[0]; p < &inode_table[NR_INODE]; p++)
-			{
-				printl("inode: %d\n", p->i_num);
-			}
             if (++m >= nr_dir_entries)
 			{
                 printl("\n");
