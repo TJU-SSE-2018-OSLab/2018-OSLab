@@ -92,19 +92,6 @@ PUBLIC int kernel_main()
                   DA_32 | DA_LIMIT_4K | DA_DRW | privilege << 5);
         }
 
-        // memcpy(&p_proc->ldts[INDEX_LDT_C], &gdt[SELECTOR_KERNEL_CS >> 3],
-        //        sizeof(struct descriptor));
-        // p_proc->ldts[0].attr1 = DA_C | privilege << 5;
-        // memcpy(&p_proc->ldts[INDEX_LDT_RW], &gdt[SELECTOR_KERNEL_DS >> 3],
-        //        sizeof(struct descriptor));
-        // p_proc->ldts[1].attr1 = DA_DRW | privilege << 5;
-
-        // p_proc->regs.cs = (0 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        // p_proc->regs.ds = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        // p_proc->regs.es = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        // p_proc->regs.fs = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        // p_proc->regs.ss = (8 & SA_RPL_MASK & SA_TI_MASK) | SA_TIL | rpl;
-        // p_proc->regs.gs = (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl;
         p_proc->regs.cs = INDEX_LDT_C << 3 | SA_TIL | rpl;
         p_proc->regs.ds =
             p_proc->regs.es =
@@ -519,7 +506,8 @@ void ProcessManage()
     for ( i = 0 ; i < NR_TASKS + NR_PROCS ; ++i )//逐个遍历
     {
         /*if ( proc_table[i].priority == 0) continue;//系统资源跳过*/
-        printf("        %d           %s            %d                %s\n", proc_table[i].pid, proc_table[i].name, proc_table[i].priority, proc_table[i].p_flags==FREE_SLOT? "NO":"YES");
+        if(proc_table[i].p_flags!=FREE_SLOT)
+            printf("        %d           %s            %d                %s\n", proc_table[i].pid, proc_table[i].name, proc_table[i].priority, proc_table[i].p_flags==FREE_SLOT? "NO":"YES");
     }
     printf("=============================================================================\n");
 }
