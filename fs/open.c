@@ -472,12 +472,17 @@ PUBLIC int do_ls()
         for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++)
         {
 			if (pde->inode_nr == 0)
-				break;
-			new_inode = get_inode(dir_inode->i_dev, pde->inode_nr);
-			if (new_inode->i_mode == I_DIRECTORY)
+				continue;
+			//new_inode = get_inode(dir_inode->i_dev, pde->inode_nr);
+			//if (new_inode->i_mode == I_DIRECTORY)
             	printl("  %2d    [dir]     %s\n", pde->inode_nr , pde->name);
-			else
-				printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
+			//else
+				//printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
+			struct inode * p;
+			for (p = &inode_table[0]; p < &inode_table[NR_INODE]; p++)
+			{
+				printl("inode: %d\n", p->i_num);
+			}
             if (++m >= nr_dir_entries)
 			{
                 printl("\n");
