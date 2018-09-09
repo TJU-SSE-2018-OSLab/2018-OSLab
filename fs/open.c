@@ -469,16 +469,17 @@ PUBLIC int do_ls()
         RD_SECT(dir_inode->i_dev, dir_blk0_nr + i);
 
         pde = (struct dir_entry *)fsbuf;
-		new_inode = get_inode(dir_inode->i_dev, pde->inode_nr);
         for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++)
         {
 			if (pde->inode_nr == 0)
 				break;
+			new_inode = get_inode(dir_inode->i_dev, pde->inode_nr);
 			if (new_inode->i_mode == I_DIRECTORY)
             	printl("  %2d    [dir]     %s\n", pde->inode_nr , pde->name);
 			else
 				printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
-            if (++m >= nr_dir_entries){
+            if (++m >= nr_dir_entries)
+			{
                 printl("\n");
                 break;
             }
