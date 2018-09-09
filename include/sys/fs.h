@@ -102,7 +102,7 @@ struct inode {
  * @brief Max len of a filename
  * @see   dir_entry
  */
-#define	MAX_FILENAME_LEN	12
+#define	MAX_FILENAME_LEN	11
 
 /**
  * @struct dir_entry
@@ -111,6 +111,7 @@ struct inode {
 struct dir_entry {
 	int	inode_nr;		/**< inode nr. */
 	char	name[MAX_FILENAME_LEN];	/**< Filename */
+	char type;
 };
 
 /**

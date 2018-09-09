@@ -30,7 +30,7 @@ PRIVATE struct inode * create_file(char * path, int flags);
 PRIVATE int alloc_imap_bit(int dev);
 PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc);
 PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect, int imode);
-PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filename);
+PRIVATE void new_dir_entry(struct inode * dir_inode, int inode_nr, char * filename, char type);
 
 /*****************************************************************************
  *                                do_open
@@ -166,7 +166,10 @@ PRIVATE struct inode * create_file(char * path, int flags)
 	else
 		newino = new_inode(dir_inode->i_dev, inode_nr, free_sect_nr, I_REGULAR);
 
-	new_dir_entry(dir_inode, newino->i_num, filename);
+	if (flags == ISDIR)
+		new_dir_entry(dir_inode, newino->i_num, filename,'d');
+	else
+		new_dir_entry(dir_inode, newino->i_num, filename,'f');
 
 	return newino;
 }
@@ -377,7 +380,7 @@ PRIVATE struct inode * new_inode(int dev, int inode_nr, int start_sect, int imod
  * @param inode_nr   I-node nr of the new file.
  * @param filename   Filename of the new file.
  *****************************************************************************/
-PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
+PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename,char type)
 {
 	/* write the dir_entry */
 	int dir_blk0_nr = dir_inode->i_start_sect;
@@ -416,6 +419,7 @@ PRIVATE void new_dir_entry(struct inode *dir_inode,int inode_nr,char *filename)
 		dir_inode->i_size += DIR_ENTRY_SIZE;
 	}
 	new_de->inode_nr = inode_nr;
+	new_de->type = type;
 	strcpy(new_de->name, filename);
 
 	/* write dir block -- ROOT dir block */
@@ -472,9 +476,8 @@ PUBLIC int do_ls()
         for (j = 0; j < SECTOR_SIZE / DIR_ENTRY_SIZE; j++, pde++)
         {
 			if (pde->inode_nr == 0)
-				break;
-			new_inode = get_inode(dir_inode->i_dev, pde->inode_nr);
-			if (new_inode->i_mode == I_DIRECTORY)
+				continue;
+			if (pde->type == 'd')
             	printl("  %2d    [dir]     %s\n", pde->inode_nr , pde->name);
 			else
 				printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
