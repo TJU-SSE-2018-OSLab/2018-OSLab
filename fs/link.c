@@ -113,7 +113,7 @@ PUBLIC int do_unlink()
 				if (pde->inode_nr == 0)
 					continue;
 				char* path[512];
-				convert_to_absolute(path, pathname, pde->name);
+				convert_to_absolute2(path, pathname, pde->name);
 				do_unlink2(path);
 				if (++m >= nr_dir_entries)
 					break;
@@ -308,7 +308,7 @@ PUBLIC int do_unlink2(pathname)
 				if (pde->inode_nr == 0)
 					continue;
 				char* path[512];
-				convert_to_absolute(path, pathname, pde->name);
+				convert_to_absolute2(path, pathname, pde->name);
 				do_unlink2(path);
 				if (++m >= nr_dir_entries)
 					break;

@@ -148,6 +148,7 @@ PUBLIC int strip_path(char * filename, const char * pathname,
                         ptemp = get_inode(pinode_now->i_dev, pde->inode_nr);
                         if(ptemp->i_mode == I_DIRECTORY)
                         {
+                            put_inode(pinode_now);
                             pinode_now = ptemp;
                             flag = 1;
                             break;

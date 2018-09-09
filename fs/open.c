@@ -519,6 +519,7 @@ PUBLIC int do_mkdir()
 	if (dir_inode)
 	{
 		printl("creating directory %s succeeded!\n", pathName);
+		put_inode(dir_inode);
 		return 0;
 	}
 	else
