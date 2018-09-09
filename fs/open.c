@@ -479,18 +479,14 @@ PUBLIC int do_ls()
 				continue;
 			if (pde->type == 'd')
             	printl("  %2d    [dir]     %s\n", pde->inode_nr , pde->name);
-			//else
-				//printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
-			struct inode * p;
+			else
+				printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
             if (++m >= nr_dir_entries)
 			{
                 printl("\n");
                 break;
             }
         }
-		// printl("%2d \n",k);
-		// printl("%2d \n",SECTOR_SIZE);
-		// printl("%2d \n",DIR_ENTRY_SIZE);
         if (m > nr_dir_entries) //[> all entries have been iterated <]
             break;
     }
