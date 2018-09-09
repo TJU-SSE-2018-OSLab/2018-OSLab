@@ -122,6 +122,7 @@ PUBLIC int do_unlink()
 			if (m > nr_dir_entries) //[> all entries have been iterated <]
 				break;
 		}
+		pin->i_cnt = 1;
 	}
 
 	if (pin->i_cnt > 1) {	/* the file was opened */
@@ -317,6 +318,7 @@ PUBLIC int do_unlink2(pathname)
 			if (m > nr_dir_entries) //[> all entries have been iterated <]
 				break;
 		}
+		pin->i_cnt = 1;
 	}
 
 	if (pin->i_cnt > 1) {	/* the file was opened */
