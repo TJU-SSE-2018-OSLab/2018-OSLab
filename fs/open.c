@@ -465,7 +465,7 @@ PUBLIC int do_ls()
     struct dir_entry * pde;
 	struct inode* new_inode;  // 指向每一个被遍历到的节点
 
-    printl("\ninode    type    filename\n");
+    printl("\ninode    type     filename\n");
     printl("============================\n");
 
     for (i = 0; i < nr_dir_blks; i++)
