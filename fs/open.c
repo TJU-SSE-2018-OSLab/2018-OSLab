@@ -315,7 +315,7 @@ PRIVATE int alloc_smap_bit(int dev, int nr_sects_to_alloc)
 			}
 
 			for (; k < 8; k++) { /* repeat till enough bits are set */
-				assert(((fsbuf[j] >> k) & 1) == 0);
+				//assert(((fsbuf[j] >> k) & 1) == 0);
 				fsbuf[j] |= (1 << k);
 				if (--nr_sects_to_alloc == 0)
 					break;
