@@ -71,6 +71,11 @@ PUBLIC int do_rdwt()
 
 		return fs_msg.CNT;
 	}
+	else if (imode == I_DIRECTORY && fs_msg.type == WRITE)
+	{
+		printl("can not write to a directory!\n");
+		return 0;
+	}
 	else {
 		assert(pin->i_mode == I_REGULAR || pin->i_mode == I_DIRECTORY);
 		assert((fs_msg.type == READ) || (fs_msg.type == WRITE));
