@@ -478,9 +478,9 @@ PUBLIC int do_ls()
 			if (pde->inode_nr == 0)
 				continue;
 			if (pde->type == 'd')
-            	printl("  %2d    [dir]     %s\n", pde->inode_nr , pde->name);
+            	printl("  %2d     [dir]    %s\n", pde->inode_nr , pde->name);
 			else
-				printl("  %2d    file      %s\n", pde->inode_nr , pde->name);
+				printl("  %2d     file     %s\n", pde->inode_nr , pde->name);
             if (++m >= nr_dir_entries)
 			{
                 printl("\n");
